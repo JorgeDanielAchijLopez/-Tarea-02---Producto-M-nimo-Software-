@@ -2,13 +2,16 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.database import engine
+from app.database import Base, engine
+from app import models
 
 app = FastAPI(
     title="Shell Fuel Control API",
     description="API Backend para la gestión de ventas e inventario de combustible",
     version="1.0.0"
 )
+
+Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")

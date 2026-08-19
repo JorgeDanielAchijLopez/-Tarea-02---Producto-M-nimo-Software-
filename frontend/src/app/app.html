@@ -1,6 +1,7 @@
 <div class="app-layout">
 
   <aside class="sidebar">
+
     <div class="brand">
       <div class="brand-icon">S</div>
 
@@ -11,12 +12,21 @@
     </div>
 
     <nav>
-      <a class="nav-item active">
+
+      <a
+        class="nav-item"
+        [class.active]="seccionActiva === 'dashboard'"
+        (click)="cambiarSeccion('dashboard')"
+      >
         <span class="nav-icon">▦</span>
         Dashboard
       </a>
 
-      <a class="nav-item">
+      <a
+        class="nav-item"
+        [class.active]="seccionActiva === 'ventas'"
+        (click)="cambiarSeccion('ventas')"
+      >
         <span class="nav-icon">◉</span>
         Ventas
       </a>
@@ -35,190 +45,523 @@
         <span class="nav-icon">⌂</span>
         Estaciones
       </a>
+
     </nav>
 
     <div class="sidebar-footer">
       <span class="status-dot"></span>
       Sistema conectado
     </div>
+
   </aside>
+
 
   <main class="main-content">
 
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Panel administrativo</p>
-        <h2>Dashboard</h2>
-        <p class="subtitle">
-          Monitoreo general de ventas e inventario de combustible
-        </p>
-      </div>
+    @if (seccionActiva === 'dashboard') {
 
-      <button class="refresh-button" (click)="cargarDashboard()">
-        Actualizar
-      </button>
-    </header>
+      <header class="topbar">
 
-    @if (cargando) {
-      <section class="loading">
-        <div class="loader"></div>
-        <p>Cargando información...</p>
-      </section>
-    }
+        <div>
+          <p class="eyebrow">Panel administrativo</p>
 
-    @if (error) {
-      <section class="error-box">
-        <strong>Error de conexión</strong>
-        <p>{{ error }}</p>
+          <h2>Dashboard</h2>
 
-        <button (click)="cargarDashboard()">
-          Reintentar
+          <p class="subtitle">
+            Monitoreo general de ventas e inventario de combustible
+          </p>
+        </div>
+
+        <button
+          class="refresh-button"
+          (click)="cargarDashboard()"
+        >
+          Actualizar
         </button>
-      </section>
-    }
 
-    @if (dashboard && !cargando) {
+      </header>
 
-      <section class="cards">
 
-        <article class="stat-card">
-          <div class="stat-header">
-            <span>Ingresos totales</span>
-            <span class="stat-icon">Q</span>
-          </div>
+      @if (cargando) {
 
-          <strong>
-            Q {{ numero(dashboard.ingresos_totales) | number:'1.2-2' }}
-          </strong>
+        <section class="loading">
+          <div class="loader"></div>
+          <p>Cargando información...</p>
+        </section>
 
-          <small>Ventas acumuladas</small>
-        </article>
+      }
 
-        <article class="stat-card">
-          <div class="stat-header">
-            <span>Galones vendidos</span>
-            <span class="stat-icon">G</span>
-          </div>
 
-          <strong>
-            {{ numero(dashboard.galones_vendidos) | number:'1.3-3' }}
-          </strong>
+      @if (error && !cargando) {
 
-          <small>Total despachado</small>
-        </article>
+        <section class="error-box">
+          <strong>Error</strong>
+          <p>{{ error }}</p>
+        </section>
 
-        <article class="stat-card">
-          <div class="stat-header">
-            <span>Inventario total</span>
-            <span class="stat-icon">I</span>
-          </div>
+      }
 
-          <strong>
-            {{ numero(dashboard.inventario_total) | number:'1.3-3' }}
-          </strong>
 
-          <small>Galones disponibles</small>
-        </article>
+      @if (dashboard && !cargando) {
 
-        <article class="stat-card">
-          <div class="stat-header">
-            <span>Estaciones activas</span>
-            <span class="stat-icon">E</span>
-          </div>
+        <section class="cards">
 
-          <strong>
-            {{ dashboard.estaciones_activas }}
-          </strong>
+          <article class="stat-card">
 
-          <small>Estaciones registradas</small>
-        </article>
-
-      </section>
-
-      <section class="content-grid">
-
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <h3>Ventas por combustible</h3>
-              <p>Rendimiento acumulado por producto</p>
+            <div class="stat-header">
+              <span>Ingresos totales</span>
+              <span class="stat-icon">Q</span>
             </div>
 
-            <span class="badge">
-              {{ dashboard.total_ventas }} ventas
-            </span>
-          </div>
+            <strong>
+              Q {{ numero(dashboard.ingresos_totales) | number:'1.2-2' }}
+            </strong>
 
-          <div class="table-container">
+            <small>Ventas acumuladas</small>
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Galones</th>
-                  <th>Total vendido</th>
-                </tr>
-              </thead>
+          </article>
 
-              <tbody>
-                @for (venta of dashboard.ventas_por_producto; track venta.producto) {
-                  <tr>
-                    <td>
-                      <div class="fuel-name">
-                        <span class="fuel-dot"></span>
-                        {{ venta.producto }}
-                      </div>
-                    </td>
 
-                    <td>
-                      {{ numero(venta.galones_vendidos) | number:'1.3-3' }}
-                    </td>
+          <article class="stat-card">
 
-                    <td class="money">
-                      Q {{ numero(venta.total_vendido) | number:'1.2-2' }}
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-
-          </div>
-        </article>
-
-        <article class="panel alerts-panel">
-          <div class="panel-header">
-            <div>
-              <h3>Estado de inventario</h3>
-              <p>Combustibles con menos de 500 galones</p>
+            <div class="stat-header">
+              <span>Galones vendidos</span>
+              <span class="stat-icon">G</span>
             </div>
-          </div>
 
-          @if (dashboard.inventario_bajo.length === 0) {
-            <div class="inventory-ok">
-              <div class="check-icon">✓</div>
+            <strong>
+              {{ numero(dashboard.galones_vendidos) | number:'1.3-3' }}
+            </strong>
 
-              <h4>Inventario estable</h4>
+            <small>Total despachado</small>
 
-              <p>
-                No existen productos con niveles críticos de combustible.
-              </p>
+          </article>
+
+
+          <article class="stat-card">
+
+            <div class="stat-header">
+              <span>Inventario total</span>
+              <span class="stat-icon">I</span>
             </div>
-          }
 
-          @for (item of dashboard.inventario_bajo; track item.estacion + item.producto) {
-            <div class="alert-item">
+            <strong>
+              {{ numero(dashboard.inventario_total) | number:'1.3-3' }}
+            </strong>
+
+            <small>Galones disponibles</small>
+
+          </article>
+
+
+          <article class="stat-card">
+
+            <div class="stat-header">
+              <span>Estaciones activas</span>
+              <span class="stat-icon">E</span>
+            </div>
+
+            <strong>
+              {{ dashboard.estaciones_activas }}
+            </strong>
+
+            <small>Estaciones registradas</small>
+
+          </article>
+
+        </section>
+
+
+        <section class="content-grid">
+
+          <article class="panel">
+
+            <div class="panel-header">
+
               <div>
-                <strong>{{ item.producto }}</strong>
-                <span>{{ item.estacion }}</span>
+                <h3>Ventas por combustible</h3>
+                <p>Rendimiento acumulado por producto</p>
               </div>
 
-              <span class="alert-value">
-                {{ numero(item.galones_disponibles) | number:'1.3-3' }} gal
+              <span class="badge">
+                {{ dashboard.total_ventas }} ventas
               </span>
+
             </div>
-          }
+
+
+            <div class="table-container">
+
+              <table>
+
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Galones</th>
+                    <th>Total vendido</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  @for (
+                    venta of dashboard.ventas_por_producto;
+                    track venta.producto
+                  ) {
+
+                    <tr>
+
+                      <td>
+                        <div class="fuel-name">
+                          <span class="fuel-dot"></span>
+                          {{ venta.producto }}
+                        </div>
+                      </td>
+
+                      <td>
+                        {{
+                          numero(venta.galones_vendidos)
+                          | number:'1.3-3'
+                        }}
+                      </td>
+
+                      <td class="money">
+                        Q {{
+                          numero(venta.total_vendido)
+                          | number:'1.2-2'
+                        }}
+                      </td>
+
+                    </tr>
+
+                  }
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </article>
+
+
+          <article class="panel alerts-panel">
+
+            <div class="panel-header">
+
+              <div>
+                <h3>Estado de inventario</h3>
+                <p>Combustibles con menos de 500 galones</p>
+              </div>
+
+            </div>
+
+
+            @if (dashboard.inventario_bajo.length === 0) {
+
+              <div class="inventory-ok">
+
+                <div class="check-icon">✓</div>
+
+                <h4>Inventario estable</h4>
+
+                <p>
+                  No existen productos con niveles críticos de combustible.
+                </p>
+
+              </div>
+
+            }
+
+
+            @for (
+              item of dashboard.inventario_bajo;
+              track item.estacion + item.producto
+            ) {
+
+              <div class="alert-item">
+
+                <div>
+                  <strong>{{ item.producto }}</strong>
+                  <span>{{ item.estacion }}</span>
+                </div>
+
+                <span class="alert-value">
+                  {{
+                    numero(item.galones_disponibles)
+                    | number:'1.3-3'
+                  }} gal
+                </span>
+
+              </div>
+
+            }
+
+          </article>
+
+        </section>
+
+      }
+
+    }
+
+
+    @if (seccionActiva === 'ventas') {
+
+      <header class="topbar">
+
+        <div>
+          <p class="eyebrow">Operaciones</p>
+
+          <h2>Ventas</h2>
+
+          <p class="subtitle">
+            Registro y consulta de ventas de combustible
+          </p>
+        </div>
+
+      </header>
+
+
+      @if (mensaje) {
+        <div class="success-message">
+          {{ mensaje }}
+        </div>
+      }
+
+
+      @if (error) {
+        <div class="form-error">
+          {{ error }}
+        </div>
+      }
+
+
+      <section class="sales-grid">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <h3>Nueva venta</h3>
+              <p>Registre una venta de combustible</p>
+            </div>
+
+          </div>
+
+
+          <form
+            class="sale-form"
+            (ngSubmit)="registrarVenta()"
+          >
+
+            <div class="form-group">
+
+              <label>Estación</label>
+
+              <select
+                name="estacion"
+                [(ngModel)]="nuevaVenta.estacion_id"
+              >
+
+                <option [ngValue]="0">
+                  Seleccione una estación
+                </option>
+
+                @for (
+                  estacion of estaciones;
+                  track estacion.id
+                ) {
+
+                  <option [ngValue]="estacion.id">
+                    {{ estacion.nombre }}
+                  </option>
+
+                }
+
+              </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>Combustible</label>
+
+              <select
+                name="producto"
+                [(ngModel)]="nuevaVenta.producto_id"
+              >
+
+                <option [ngValue]="0">
+                  Seleccione un producto
+                </option>
+
+                @for (
+                  producto of productos;
+                  track producto.id
+                ) {
+
+                  <option [ngValue]="producto.id">
+                    {{ producto.nombre }}
+                    - Q {{ producto.precio_galon }}
+                  </option>
+
+                }
+
+              </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>Galones</label>
+
+              <input
+                type="number"
+                name="galones"
+                [(ngModel)]="nuevaVenta.galones"
+                min="0.001"
+                step="0.001"
+                placeholder="Cantidad de galones"
+              >
+
+            </div>
+
+
+            <button
+              type="submit"
+              class="primary-button"
+            >
+              Registrar venta
+            </button>
+
+          </form>
 
         </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <h3>Información</h3>
+              <p>Proceso automático de la venta</p>
+            </div>
+
+          </div>
+
+
+          <div class="process-list">
+
+            <div class="process-item">
+              <span>1</span>
+              <p>Seleccione estación y combustible.</p>
+            </div>
+
+            <div class="process-item">
+              <span>2</span>
+              <p>Ingrese los galones vendidos.</p>
+            </div>
+
+            <div class="process-item">
+              <span>3</span>
+              <p>El sistema calcula el total automáticamente.</p>
+            </div>
+
+            <div class="process-item">
+              <span>4</span>
+              <p>El inventario se descuenta automáticamente.</p>
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="panel sales-history">
+
+        <div class="panel-header">
+
+          <div>
+            <h3>Historial de ventas</h3>
+            <p>Últimas operaciones registradas</p>
+          </div>
+
+          <span class="badge">
+            {{ ventas.length }} registros
+          </span>
+
+        </div>
+
+
+        <div class="table-container">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>ID</th>
+                <th>Estación</th>
+                <th>Producto</th>
+                <th>Galones</th>
+                <th>Precio</th>
+                <th>Total</th>
+                <th>Fecha</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              @for (venta of ventas; track venta.id) {
+
+                <tr>
+
+                  <td>#{{ venta.id }}</td>
+
+                  <td>
+                    {{ obtenerEstacion(venta.estacion_id) }}
+                  </td>
+
+                  <td>
+                    <div class="fuel-name">
+                      <span class="fuel-dot"></span>
+                      {{ obtenerProducto(venta.producto_id) }}
+                    </div>
+                  </td>
+
+                  <td>
+                    {{ numero(venta.galones) | number:'1.3-3' }}
+                  </td>
+
+                  <td>
+                    Q {{ numero(venta.precio_galon) | number:'1.2-2' }}
+                  </td>
+
+                  <td class="money">
+                    Q {{ numero(venta.total) | number:'1.2-2' }}
+                  </td>
+
+                  <td>
+                    {{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </section>
 

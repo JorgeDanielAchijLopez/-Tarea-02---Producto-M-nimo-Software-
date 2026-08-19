@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -317,3 +319,128 @@ def actualizar_inventario(
     db.refresh(inventario)
 
     return inventario
+
+
+# =========================
+# VENTAS
+# =========================
+
+@app.post(
+    "/ventas",
+    response_model=schemas.VentaResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def crear_venta(
+    venta: schemas.VentaCreate,
+    db: Session = Depends(get_db)
+):
+    estacion = (
+        db.query(models.Estacion)
+        .filter(models.Estacion.id == venta.estacion_id)
+        .first()
+    )
+
+    if not estacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Estacion no encontrada"
+        )
+
+    producto = (
+        db.query(models.Producto)
+        .filter(models.Producto.id == venta.producto_id)
+        .first()
+    )
+
+    if not producto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Producto no encontrado"
+        )
+
+    inventario = (
+        db.query(models.Inventario)
+        .filter(
+            models.Inventario.estacion_id == venta.estacion_id,
+            models.Inventario.producto_id == venta.producto_id
+        )
+        .with_for_update()
+        .first()
+    )
+
+    if not inventario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No existe inventario para este producto en la estacion"
+        )
+
+    if inventario.galones_disponibles < venta.galones:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inventario insuficiente para realizar la venta"
+        )
+
+    precio_galon = Decimal(producto.precio_galon)
+
+    total = (
+        Decimal(venta.galones) * precio_galon
+    ).quantize(
+        Decimal("0.01"),
+        rounding=ROUND_HALF_UP
+    )
+
+    try:
+        nueva_venta = models.Venta(
+            estacion_id=venta.estacion_id,
+            producto_id=venta.producto_id,
+            galones=venta.galones,
+            precio_galon=precio_galon,
+            total=total
+        )
+
+        inventario.galones_disponibles -= venta.galones
+
+        db.add(nueva_venta)
+        db.commit()
+        db.refresh(nueva_venta)
+
+        return nueva_venta
+
+    except SQLAlchemyError:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al registrar la venta"
+        )
+
+
+@app.get(
+    "/ventas",
+    response_model=list[schemas.VentaResponse]
+)
+def listar_ventas(db: Session = Depends(get_db)):
+    return db.query(models.Venta).order_by(models.Venta.id.desc()).all()
+
+
+@app.get(
+    "/ventas/{venta_id}",
+    response_model=schemas.VentaResponse
+)
+def obtener_venta(
+    venta_id: int,
+    db: Session = Depends(get_db)
+):
+    venta = (
+        db.query(models.Venta)
+        .filter(models.Venta.id == venta_id)
+        .first()
+    )
+
+    if not venta:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Venta no encontrada"
+        )
+
+    return venta

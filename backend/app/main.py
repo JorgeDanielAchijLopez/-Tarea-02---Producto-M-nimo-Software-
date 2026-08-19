@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 
 from fastapi import Depends, FastAPI, HTTPException, status
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -444,3 +444,108 @@ def obtener_venta(
         )
 
     return venta
+
+
+# =========================
+# DASHBOARD
+# =========================
+
+@app.get(
+    "/dashboard",
+    response_model=schemas.DashboardResponse
+)
+def obtener_dashboard(db: Session = Depends(get_db)):
+
+    total_ventas = (
+        db.query(func.count(models.Venta.id))
+        .scalar()
+    ) or 0
+
+    ingresos_totales = (
+        db.query(func.sum(models.Venta.total))
+        .scalar()
+    ) or Decimal("0.00")
+
+    galones_vendidos = (
+        db.query(func.sum(models.Venta.galones))
+        .scalar()
+    ) or Decimal("0.000")
+
+    inventario_total = (
+        db.query(func.sum(models.Inventario.galones_disponibles))
+        .scalar()
+    ) or Decimal("0.000")
+
+    estaciones_activas = (
+        db.query(func.count(models.Estacion.id))
+        .filter(models.Estacion.estado == "Activa")
+        .scalar()
+    ) or 0
+
+    ventas_producto = (
+        db.query(
+            models.Producto.nombre,
+            func.sum(models.Venta.galones).label("galones_vendidos"),
+            func.sum(models.Venta.total).label("total_vendido")
+        )
+        .outerjoin(
+            models.Venta,
+            models.Venta.producto_id == models.Producto.id
+        )
+        .group_by(
+            models.Producto.id,
+            models.Producto.nombre
+        )
+        .order_by(models.Producto.id)
+        .all()
+    )
+
+    ventas_por_producto = []
+
+    for fila in ventas_producto:
+        ventas_por_producto.append(
+            {
+                "producto": fila.nombre,
+                "galones_vendidos": fila.galones_vendidos or Decimal("0.000"),
+                "total_vendido": fila.total_vendido or Decimal("0.00")
+            }
+        )
+
+    inventarios_bajos = (
+        db.query(
+            models.Inventario,
+            models.Estacion.nombre.label("estacion_nombre"),
+            models.Producto.nombre.label("producto_nombre")
+        )
+        .join(
+            models.Estacion,
+            models.Inventario.estacion_id == models.Estacion.id
+        )
+        .join(
+            models.Producto,
+            models.Inventario.producto_id == models.Producto.id
+        )
+        .filter(models.Inventario.galones_disponibles < 500)
+        .all()
+    )
+
+    inventario_bajo = []
+
+    for fila in inventarios_bajos:
+        inventario_bajo.append(
+            {
+                "estacion": fila.estacion_nombre,
+                "producto": fila.producto_nombre,
+                "galones_disponibles": fila.Inventario.galones_disponibles
+            }
+        )
+
+    return {
+        "total_ventas": total_ventas,
+        "ingresos_totales": ingresos_totales,
+        "galones_vendidos": galones_vendidos,
+        "inventario_total": inventario_total,
+        "estaciones_activas": estaciones_activas,
+        "ventas_por_producto": ventas_por_producto,
+        "inventario_bajo": inventario_bajo
+    }

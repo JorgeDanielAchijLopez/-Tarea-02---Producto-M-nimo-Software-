@@ -82,3 +82,29 @@ class VentaResponse(BaseModel):
     fecha: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# =========================
+# DASHBOARD
+# =========================
+
+class VentaProductoDashboard(BaseModel):
+    producto: str
+    galones_vendidos: Decimal
+    total_vendido: Decimal
+
+
+class InventarioBajoDashboard(BaseModel):
+    estacion: str
+    producto: str
+    galones_disponibles: Decimal
+
+
+class DashboardResponse(BaseModel):
+    total_ventas: int
+    ingresos_totales: Decimal
+    galones_vendidos: Decimal
+    inventario_total: Decimal
+    estaciones_activas: int
+    ventas_por_producto: list[VentaProductoDashboard]
+    inventario_bajo: list[InventarioBajoDashboard]

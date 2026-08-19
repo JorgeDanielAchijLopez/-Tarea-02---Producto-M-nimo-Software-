@@ -192,3 +192,128 @@ def obtener_estacion(
         )
 
     return estacion
+
+
+# =========================
+# INVENTARIO
+# =========================
+
+@app.post(
+    "/inventario",
+    response_model=schemas.InventarioResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def crear_inventario(
+    inventario: schemas.InventarioCreate,
+    db: Session = Depends(get_db)
+):
+    estacion = (
+        db.query(models.Estacion)
+        .filter(models.Estacion.id == inventario.estacion_id)
+        .first()
+    )
+
+    if not estacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Estacion no encontrada"
+        )
+
+    producto = (
+        db.query(models.Producto)
+        .filter(models.Producto.id == inventario.producto_id)
+        .first()
+    )
+
+    if not producto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Producto no encontrado"
+        )
+
+    inventario_existente = (
+        db.query(models.Inventario)
+        .filter(
+            models.Inventario.estacion_id == inventario.estacion_id,
+            models.Inventario.producto_id == inventario.producto_id
+        )
+        .first()
+    )
+
+    if inventario_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe inventario para este producto en esta estacion"
+        )
+
+    nuevo_inventario = models.Inventario(
+        estacion_id=inventario.estacion_id,
+        producto_id=inventario.producto_id,
+        galones_disponibles=inventario.galones_disponibles
+    )
+
+    db.add(nuevo_inventario)
+    db.commit()
+    db.refresh(nuevo_inventario)
+
+    return nuevo_inventario
+
+
+@app.get(
+    "/inventario",
+    response_model=list[schemas.InventarioResponse]
+)
+def listar_inventario(db: Session = Depends(get_db)):
+    return db.query(models.Inventario).order_by(models.Inventario.id).all()
+
+
+@app.get(
+    "/inventario/{inventario_id}",
+    response_model=schemas.InventarioResponse
+)
+def obtener_inventario(
+    inventario_id: int,
+    db: Session = Depends(get_db)
+):
+    inventario = (
+        db.query(models.Inventario)
+        .filter(models.Inventario.id == inventario_id)
+        .first()
+    )
+
+    if not inventario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Registro de inventario no encontrado"
+        )
+
+    return inventario
+
+
+@app.put(
+    "/inventario/{inventario_id}",
+    response_model=schemas.InventarioResponse
+)
+def actualizar_inventario(
+    inventario_id: int,
+    datos: schemas.InventarioUpdate,
+    db: Session = Depends(get_db)
+):
+    inventario = (
+        db.query(models.Inventario)
+        .filter(models.Inventario.id == inventario_id)
+        .first()
+    )
+
+    if not inventario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Registro de inventario no encontrado"
+        )
+
+    inventario.galones_disponibles = datos.galones_disponibles
+
+    db.commit()
+    db.refresh(inventario)
+
+    return inventario

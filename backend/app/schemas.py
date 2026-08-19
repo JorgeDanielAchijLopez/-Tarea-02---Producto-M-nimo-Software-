@@ -36,3 +36,26 @@ class EstacionResponse(BaseModel):
     estado: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# =========================
+# INVENTARIO
+# =========================
+
+class InventarioCreate(BaseModel):
+    estacion_id: int = Field(gt=0)
+    producto_id: int = Field(gt=0)
+    galones_disponibles: Decimal = Field(ge=0)
+
+
+class InventarioUpdate(BaseModel):
+    galones_disponibles: Decimal = Field(ge=0)
+
+
+class InventarioResponse(BaseModel):
+    id: int
+    estacion_id: int
+    producto_id: int
+    galones_disponibles: Decimal
+
+    model_config = ConfigDict(from_attributes=True)

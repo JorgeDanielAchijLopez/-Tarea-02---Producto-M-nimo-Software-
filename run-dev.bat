@@ -52,4 +52,4 @@ echo ==========================================
 echo.
 
 cd /d "%~dp0frontend"
-call npx ng serve
+call npx ng serve --proxy-config proxy.conf.json

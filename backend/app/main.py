@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
-from app.database import Base, engine
-from app import models
+from app import models, schemas
+from app.database import Base, engine, get_db
 
 app = FastAPI(
     title="Shell Fuel Control API",
@@ -49,3 +50,67 @@ def database_health():
             "message": "No se pudo establecer conexion con la base de datos",
             "detail": str(error)
         }
+
+
+@app.post(
+    "/productos",
+    response_model=schemas.ProductoResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def crear_producto(
+    producto: schemas.ProductoCreate,
+    db: Session = Depends(get_db)
+):
+    producto_existente = (
+        db.query(models.Producto)
+        .filter(models.Producto.nombre == producto.nombre)
+        .first()
+    )
+
+    if producto_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un producto con ese nombre"
+        )
+
+    nuevo_producto = models.Producto(
+        nombre=producto.nombre,
+        precio_galon=producto.precio_galon
+    )
+
+    db.add(nuevo_producto)
+    db.commit()
+    db.refresh(nuevo_producto)
+
+    return nuevo_producto
+
+
+@app.get(
+    "/productos",
+    response_model=list[schemas.ProductoResponse]
+)
+def listar_productos(db: Session = Depends(get_db)):
+    return db.query(models.Producto).order_by(models.Producto.id).all()
+
+
+@app.get(
+    "/productos/{producto_id}",
+    response_model=schemas.ProductoResponse
+)
+def obtener_producto(
+    producto_id: int,
+    db: Session = Depends(get_db)
+):
+    producto = (
+        db.query(models.Producto)
+        .filter(models.Producto.id == producto_id)
+        .first()
+    )
+
+    if not producto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Producto no encontrado"
+        )
+
+    return producto

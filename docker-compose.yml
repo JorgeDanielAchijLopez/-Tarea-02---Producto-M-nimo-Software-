@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: shell_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: shell_admin
+      POSTGRES_PASSWORD: shell123
+      POSTGRES_DB: shell_fuel_control
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - shell_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  shell_postgres_data:

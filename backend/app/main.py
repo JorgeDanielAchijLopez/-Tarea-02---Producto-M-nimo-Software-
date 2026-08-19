@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import Base, engine, get_db
 
+
 app = FastAPI(
     title="Shell Fuel Control API",
     description="API Backend para la gestión de ventas e inventario de combustible",
@@ -14,6 +15,10 @@ app = FastAPI(
 
 Base.metadata.create_all(bind=engine)
 
+
+# =========================
+# SISTEMA
+# =========================
 
 @app.get("/")
 def inicio():
@@ -51,6 +56,10 @@ def database_health():
             "detail": str(error)
         }
 
+
+# =========================
+# PRODUCTOS
+# =========================
 
 @app.post(
     "/productos",
@@ -114,3 +123,72 @@ def obtener_producto(
         )
 
     return producto
+
+
+# =========================
+# ESTACIONES
+# =========================
+
+@app.post(
+    "/estaciones",
+    response_model=schemas.EstacionResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def crear_estacion(
+    estacion: schemas.EstacionCreate,
+    db: Session = Depends(get_db)
+):
+    estacion_existente = (
+        db.query(models.Estacion)
+        .filter(models.Estacion.nombre == estacion.nombre)
+        .first()
+    )
+
+    if estacion_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe una estacion con ese nombre"
+        )
+
+    nueva_estacion = models.Estacion(
+        nombre=estacion.nombre,
+        direccion=estacion.direccion,
+        estado="Activa"
+    )
+
+    db.add(nueva_estacion)
+    db.commit()
+    db.refresh(nueva_estacion)
+
+    return nueva_estacion
+
+
+@app.get(
+    "/estaciones",
+    response_model=list[schemas.EstacionResponse]
+)
+def listar_estaciones(db: Session = Depends(get_db)):
+    return db.query(models.Estacion).order_by(models.Estacion.id).all()
+
+
+@app.get(
+    "/estaciones/{estacion_id}",
+    response_model=schemas.EstacionResponse
+)
+def obtener_estacion(
+    estacion_id: int,
+    db: Session = Depends(get_db)
+):
+    estacion = (
+        db.query(models.Estacion)
+        .filter(models.Estacion.id == estacion_id)
+        .first()
+    )
+
+    if not estacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Estacion no encontrada"
+        )
+
+    return estacion

@@ -225,10 +225,18 @@
                     <tr>
 
                       <td>
+
                         <div class="fuel-name">
-                          <span class="fuel-dot"></span>
+
+                          <span
+                            class="product-fuel-dot"
+                            [ngClass]="claseColorProducto(venta.producto)"
+                          ></span>
+
                           {{ venta.producto }}
+
                         </div>
+
                       </td>
 
                       <td>
@@ -295,8 +303,20 @@
               <div class="alert-item">
 
                 <div>
-                  <strong>{{ item.producto }}</strong>
+
+                  <div class="fuel-name">
+
+                    <span
+                      class="product-fuel-dot"
+                      [ngClass]="claseColorProducto(item.producto)"
+                    ></span>
+
+                    <strong>{{ item.producto }}</strong>
+
+                  </div>
+
                   <span>{{ item.estacion }}</span>
+
                 </div>
 
                 <span class="alert-value">
@@ -420,6 +440,26 @@
 
               </select>
 
+
+              @if (nuevaVenta.producto_id > 0) {
+
+                <div class="fuel-name">
+
+                  <span
+                    class="product-fuel-dot"
+                    [ngClass]="
+                      claseColorProducto(
+                        obtenerProducto(nuevaVenta.producto_id)
+                      )
+                    "
+                  ></span>
+
+                  {{ obtenerProducto(nuevaVenta.producto_id) }}
+
+                </div>
+
+              }
+
             </div>
 
 
@@ -537,10 +577,22 @@
                   </td>
 
                   <td>
+
                     <div class="fuel-name">
-                      <span class="fuel-dot"></span>
+
+                      <span
+                        class="product-fuel-dot"
+                        [ngClass]="
+                          claseColorProducto(
+                            obtenerProducto(venta.producto_id)
+                          )
+                        "
+                      ></span>
+
                       {{ obtenerProducto(venta.producto_id) }}
+
                     </div>
+
                   </td>
 
                   <td>
@@ -613,9 +665,188 @@
       }
 
 
+      <section class="sales-grid">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <h3>Asignar combustible a estación</h3>
+
+              <p>
+                Agregue Regular, Super, Diesel o V-Power
+                a una estación
+              </p>
+            </div>
+
+          </div>
+
+
+          <form
+            class="sale-form"
+            (ngSubmit)="registrarInventario()"
+          >
+
+            <div class="form-group">
+
+              <label>Estación</label>
+
+              <select
+                name="inventarioEstacion"
+                [(ngModel)]="nuevoInventario.estacion_id"
+              >
+
+                <option [ngValue]="0">
+                  Seleccione una estación
+                </option>
+
+                @for (estacion of estaciones; track estacion.id) {
+
+                  <option [ngValue]="estacion.id">
+                    {{ estacion.nombre }}
+                  </option>
+
+                }
+
+              </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>Producto</label>
+
+              <select
+                name="inventarioProducto"
+                [(ngModel)]="nuevoInventario.producto_id"
+              >
+
+                <option [ngValue]="0">
+                  Seleccione un producto
+                </option>
+
+                @for (producto of productos; track producto.id) {
+
+                  <option [ngValue]="producto.id">
+                    {{ producto.nombre }}
+                  </option>
+
+                }
+
+              </select>
+
+
+              @if (nuevoInventario.producto_id > 0) {
+
+                <div class="fuel-name">
+
+                  <span
+                    class="product-fuel-dot"
+                    [ngClass]="
+                      claseColorProducto(
+                        obtenerProducto(
+                          nuevoInventario.producto_id
+                        )
+                      )
+                    "
+                  ></span>
+
+                  {{
+                    obtenerProducto(
+                      nuevoInventario.producto_id
+                    )
+                  }}
+
+                </div>
+
+              }
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>Galones iniciales</label>
+
+              <input
+                type="number"
+                name="inventarioGalones"
+                [(ngModel)]="
+                  nuevoInventario.galones_disponibles
+                "
+                min="0"
+                step="0.001"
+                placeholder="Cantidad inicial"
+              >
+
+            </div>
+
+
+            <button
+              type="submit"
+              class="primary-button"
+            >
+              Asignar producto
+            </button>
+
+          </form>
+
+        </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <h3>Distribución por estación</h3>
+
+              <p>
+                Cada estación puede manejar diferentes combustibles
+              </p>
+            </div>
+
+          </div>
+
+
+          <div class="process-list">
+
+            <div class="process-item">
+              <span>1</span>
+              <p>Seleccione una estación.</p>
+            </div>
+
+            <div class="process-item">
+              <span>2</span>
+              <p>Seleccione el combustible.</p>
+            </div>
+
+            <div class="process-item">
+              <span>3</span>
+              <p>Ingrese los galones iniciales.</p>
+            </div>
+
+            <div class="process-item">
+              <span>4</span>
+              <p>
+                Puede asignar tres o los cuatro combustibles
+                según la estación.
+              </p>
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
       <section class="inventory-summary">
 
         <article class="mini-stat">
+
           <span>Registros</span>
 
           <strong>
@@ -623,24 +854,33 @@
           </strong>
 
           <small>Inventarios registrados</small>
+
         </article>
 
 
         <article class="mini-stat">
+
           <span>Inventario total</span>
 
           <strong>
+
             @if (dashboard) {
+
               {{
                 numero(dashboard.inventario_total)
                 | number:'1.3-3'
               }}
+
             } @else {
+
               0
+
             }
+
           </strong>
 
           <small>Galones disponibles</small>
+
         </article>
 
       </section>
@@ -667,6 +907,7 @@
           <table>
 
             <thead>
+
               <tr>
                 <th>ID</th>
                 <th>Estación</th>
@@ -675,7 +916,9 @@
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
+
             </thead>
+
 
             <tbody>
 
@@ -689,11 +932,24 @@
                     {{ obtenerEstacion(item.estacion_id) }}
                   </td>
 
+
                   <td>
+
                     <div class="fuel-name">
-                      <span class="fuel-dot"></span>
+
+                      <span
+                        class="product-fuel-dot"
+                        [ngClass]="
+                          claseColorProducto(
+                            obtenerProducto(item.producto_id)
+                          )
+                        "
+                      ></span>
+
                       {{ obtenerProducto(item.producto_id) }}
+
                     </div>
+
                   </td>
 
 
@@ -729,14 +985,27 @@
 
                     <span
                       class="inventory-status"
-                      [class.status-critical]="numero(item.galones_disponibles) < 500"
+
+                      [class.status-critical]="
+                        numero(item.galones_disponibles) < 500
+                      "
+
                       [class.status-low]="
                         numero(item.galones_disponibles) >= 500 &&
                         numero(item.galones_disponibles) < 1000
                       "
-                      [class.status-ok]="numero(item.galones_disponibles) >= 1000"
+
+                      [class.status-ok]="
+                        numero(item.galones_disponibles) >= 1000
+                      "
                     >
-                      {{ estadoInventario(item.galones_disponibles) }}
+
+                      {{
+                        estadoInventario(
+                          item.galones_disponibles
+                        )
+                      }}
+
                     </span>
 
                   </td>
@@ -934,13 +1203,16 @@
           <table>
 
             <thead>
+
               <tr>
                 <th>ID</th>
                 <th>Producto</th>
                 <th>Precio por galón</th>
                 <th>Estado</th>
               </tr>
+
             </thead>
+
 
             <tbody>
 
@@ -956,12 +1228,8 @@
 
                       <span
                         class="product-fuel-dot"
-                        [class.fuel-regular]="producto.nombre.toLowerCase() === 'regular'"
-                        [class.fuel-super]="producto.nombre.toLowerCase() === 'super'"
-                        [class.fuel-diesel]="producto.nombre.toLowerCase() === 'diesel'"
-                        [class.fuel-vpower]="
-                          producto.nombre.toLowerCase() === 'v-power' ||
-                          producto.nombre.toLowerCase() === 'v power'
+                        [ngClass]="
+                          claseColorProducto(producto.nombre)
                         "
                       ></span>
 
@@ -972,16 +1240,20 @@
                   </td>
 
                   <td class="money">
+
                     Q {{
                       numero(producto.precio_galon)
                       | number:'1.2-2'
                     }}
+
                   </td>
 
                   <td>
+
                     <span class="product-active">
                       Disponible
                     </span>
+
                   </td>
 
                 </tr>
@@ -1139,13 +1411,16 @@
           <table>
 
             <thead>
+
               <tr>
                 <th>ID</th>
                 <th>Estación</th>
                 <th>Dirección</th>
                 <th>Estado</th>
               </tr>
+
             </thead>
+
 
             <tbody>
 
@@ -1166,9 +1441,11 @@
                   </td>
 
                   <td>
+
                     <span class="station-active">
                       {{ estacion.estado }}
                     </span>
+
                   </td>
 
                 </tr>

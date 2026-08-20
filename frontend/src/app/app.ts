@@ -108,6 +108,12 @@ export class App implements OnInit {
     direccion: ''
   };
 
+  nuevoInventario = {
+    estacion_id: 0,
+    producto_id: 0,
+    galones_disponibles: 0
+  };
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef
@@ -368,6 +374,67 @@ export class App implements OnInit {
     });
   }
 
+  registrarInventario(): void {
+    this.error = '';
+    this.mensaje = '';
+
+    if (
+      this.nuevoInventario.estacion_id <= 0 ||
+      this.nuevoInventario.producto_id <= 0 ||
+      this.nuevoInventario.galones_disponibles < 0
+    ) {
+      this.error =
+        'Seleccione una estación, un producto y una cantidad válida.';
+      return;
+    }
+
+    const existe = this.inventarios.some(
+      item =>
+        item.estacion_id === this.nuevoInventario.estacion_id &&
+        item.producto_id === this.nuevoInventario.producto_id
+    );
+
+    if (existe) {
+      this.error =
+        'Este producto ya está asignado a la estación seleccionada. Puede modificar sus galones desde la tabla.';
+      return;
+    }
+
+    this.http.post<Inventario>(
+      '/api/inventario',
+      this.nuevoInventario
+    ).subscribe({
+      next: () => {
+        this.mensaje =
+          'Producto asignado a la estación correctamente.';
+
+        this.nuevoInventario = {
+          estacion_id: 0,
+          producto_id: 0,
+          galones_disponibles: 0
+        };
+
+        this.cargarInventario();
+        this.cargarDashboard();
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('Error registrando inventario:', error);
+
+        if (error.error?.detail) {
+          this.error = error.error.detail;
+        } else {
+          this.error =
+            'No fue posible asignar el producto a la estación.';
+        }
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   editarInventario(item: Inventario): void {
     this.inventarioEditandoId = item.id;
 
@@ -401,7 +468,8 @@ export class App implements OnInit {
       datos
     ).subscribe({
       next: () => {
-        this.mensaje = 'Inventario actualizado correctamente.';
+        this.mensaje =
+          'Inventario actualizado correctamente.';
 
         this.inventarioEditandoId = null;
         this.nuevaCantidadInventario = 0;
@@ -418,7 +486,8 @@ export class App implements OnInit {
         if (error.error?.detail) {
           this.error = error.error.detail;
         } else {
-          this.error = 'No fue posible actualizar el inventario.';
+          this.error =
+            'No fue posible actualizar el inventario.';
         }
 
         this.cdr.detectChanges();
@@ -458,6 +527,34 @@ export class App implements OnInit {
     }
 
     return 'Estable';
+  }
+
+  claseColorProducto(nombre: string): string {
+    const producto = nombre
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-');
+
+    if (producto === 'regular') {
+      return 'fuel-regular';
+    }
+
+    if (producto === 'super') {
+      return 'fuel-super';
+    }
+
+    if (producto === 'diesel') {
+      return 'fuel-diesel';
+    }
+
+    if (
+      producto === 'v-power' ||
+      producto === 'vpower'
+    ) {
+      return 'fuel-vpower';
+    }
+
+    return '';
   }
 
   numero(valor: number | string): number {

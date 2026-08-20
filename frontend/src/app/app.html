@@ -79,6 +79,7 @@
         <div>
           <p class="eyebrow">Panel administrativo</p>
           <h2>Dashboard</h2>
+
           <p class="subtitle">
             Monitoreo general de ventas e inventario de combustible
           </p>
@@ -93,6 +94,7 @@
 
       </header>
 
+
       @if (cargando) {
 
         <section class="loading">
@@ -101,6 +103,7 @@
         </section>
 
       }
+
 
       @if (error && !cargando) {
 
@@ -111,11 +114,13 @@
 
       }
 
+
       @if (dashboard && !cargando) {
 
         <section class="cards">
 
           <article class="stat-card">
+
             <div class="stat-header">
               <span>Ingresos totales</span>
               <span class="stat-icon">Q</span>
@@ -126,10 +131,12 @@
             </strong>
 
             <small>Ventas acumuladas</small>
+
           </article>
 
 
           <article class="stat-card">
+
             <div class="stat-header">
               <span>Galones vendidos</span>
               <span class="stat-icon">G</span>
@@ -140,10 +147,12 @@
             </strong>
 
             <small>Total despachado</small>
+
           </article>
 
 
           <article class="stat-card">
+
             <div class="stat-header">
               <span>Inventario total</span>
               <span class="stat-icon">I</span>
@@ -154,10 +163,12 @@
             </strong>
 
             <small>Galones disponibles</small>
+
           </article>
 
 
           <article class="stat-card">
+
             <div class="stat-header">
               <span>Estaciones activas</span>
               <span class="stat-icon">E</span>
@@ -168,6 +179,7 @@
             </strong>
 
             <small>Estaciones registradas</small>
+
           </article>
 
         </section>
@@ -178,6 +190,7 @@
           <article class="panel">
 
             <div class="panel-header">
+
               <div>
                 <h3>Ventas por combustible</h3>
                 <p>Rendimiento acumulado por producto</p>
@@ -186,6 +199,7 @@
               <span class="badge">
                 {{ dashboard.total_ventas }} ventas
               </span>
+
             </div>
 
 
@@ -247,24 +261,31 @@
           <article class="panel alerts-panel">
 
             <div class="panel-header">
+
               <div>
                 <h3>Estado de inventario</h3>
                 <p>Combustibles con menos de 500 galones</p>
               </div>
+
             </div>
+
 
             @if (dashboard.inventario_bajo.length === 0) {
 
               <div class="inventory-ok">
+
                 <div class="check-icon">✓</div>
+
                 <h4>Inventario estable</h4>
 
                 <p>
                   No existen productos con niveles críticos de combustible.
                 </p>
+
               </div>
 
             }
+
 
             @for (
               item of dashboard.inventario_bajo;
@@ -315,11 +336,13 @@
 
       </header>
 
+
       @if (mensaje) {
         <div class="success-message">
           {{ mensaje }}
         </div>
       }
+
 
       @if (error) {
         <div class="form-error">
@@ -327,16 +350,20 @@
         </div>
       }
 
+
       <section class="sales-grid">
 
         <article class="panel">
 
           <div class="panel-header">
+
             <div>
               <h3>Nueva venta</h3>
               <p>Registre una venta de combustible</p>
             </div>
+
           </div>
+
 
           <form
             class="sale-form"
@@ -344,47 +371,60 @@
           >
 
             <div class="form-group">
+
               <label>Estación</label>
 
               <select
                 name="estacion"
                 [(ngModel)]="nuevaVenta.estacion_id"
               >
+
                 <option [ngValue]="0">
                   Seleccione una estación
                 </option>
 
                 @for (estacion of estaciones; track estacion.id) {
+
                   <option [ngValue]="estacion.id">
                     {{ estacion.nombre }}
                   </option>
+
                 }
+
               </select>
+
             </div>
 
 
             <div class="form-group">
+
               <label>Combustible</label>
 
               <select
                 name="producto"
                 [(ngModel)]="nuevaVenta.producto_id"
               >
+
                 <option [ngValue]="0">
                   Seleccione un producto
                 </option>
 
                 @for (producto of productos; track producto.id) {
+
                   <option [ngValue]="producto.id">
                     {{ producto.nombre }}
                     - Q {{ producto.precio_galon }}
                   </option>
+
                 }
+
               </select>
+
             </div>
 
 
             <div class="form-group">
+
               <label>Galones</label>
 
               <input
@@ -395,7 +435,9 @@
                 step="0.001"
                 placeholder="Cantidad de galones"
               >
+
             </div>
+
 
             <button
               type="submit"
@@ -412,11 +454,14 @@
         <article class="panel">
 
           <div class="panel-header">
+
             <div>
               <h3>Información</h3>
               <p>Proceso automático de la venta</p>
             </div>
+
           </div>
+
 
           <div class="process-list">
 
@@ -461,6 +506,7 @@
           </span>
 
         </div>
+
 
         <div class="table-container">
 
@@ -552,11 +598,13 @@
 
       </header>
 
+
       @if (mensaje) {
         <div class="success-message">
           {{ mensaje }}
         </div>
       }
+
 
       @if (error) {
         <div class="form-error">
@@ -564,13 +612,19 @@
         </div>
       }
 
+
       <section class="inventory-summary">
 
         <article class="mini-stat">
           <span>Registros</span>
-          <strong>{{ inventarios.length }}</strong>
+
+          <strong>
+            {{ inventarios.length }}
+          </strong>
+
           <small>Inventarios registrados</small>
         </article>
+
 
         <article class="mini-stat">
           <span>Inventario total</span>
@@ -607,6 +661,7 @@
 
         </div>
 
+
         <div class="table-container">
 
           <table>
@@ -641,6 +696,7 @@
                     </div>
                   </td>
 
+
                   <td>
 
                     @if (inventarioEditandoId === item.id) {
@@ -668,6 +724,7 @@
 
                   </td>
 
+
                   <td>
 
                     <span
@@ -683,6 +740,7 @@
                     </span>
 
                   </td>
+
 
                   <td>
 
@@ -758,11 +816,13 @@
 
       </header>
 
+
       @if (mensaje) {
         <div class="success-message">
           {{ mensaje }}
         </div>
       }
+
 
       @if (error) {
         <div class="form-error">
@@ -770,16 +830,20 @@
         </div>
       }
 
+
       <section class="products-grid">
 
         <article class="panel">
 
           <div class="panel-header">
+
             <div>
               <h3>Nuevo producto</h3>
               <p>Registre un nuevo tipo de combustible</p>
             </div>
+
           </div>
+
 
           <form
             class="product-form"
@@ -787,6 +851,7 @@
           >
 
             <div class="form-group">
+
               <label>Nombre</label>
 
               <input
@@ -795,9 +860,12 @@
                 [(ngModel)]="nuevoProducto.nombre"
                 placeholder="Nombre del combustible"
               >
+
             </div>
 
+
             <div class="form-group">
+
               <label>Precio por galón</label>
 
               <input
@@ -808,7 +876,9 @@
                 step="0.01"
                 placeholder="0.00"
               >
+
             </div>
+
 
             <button
               type="submit"
@@ -829,7 +899,10 @@
           </div>
 
           <span>Productos registrados</span>
-          <strong>{{ productos.length }}</strong>
+
+          <strong>
+            {{ productos.length }}
+          </strong>
 
           <small>
             Combustibles disponibles en el sistema
@@ -855,6 +928,7 @@
 
         </div>
 
+
         <div class="table-container">
 
           <table>
@@ -877,10 +951,24 @@
                   <td>#{{ producto.id }}</td>
 
                   <td>
+
                     <div class="fuel-name">
-                      <span class="fuel-dot"></span>
+
+                      <span
+                        class="product-fuel-dot"
+                        [class.fuel-regular]="producto.nombre.toLowerCase() === 'regular'"
+                        [class.fuel-super]="producto.nombre.toLowerCase() === 'super'"
+                        [class.fuel-diesel]="producto.nombre.toLowerCase() === 'diesel'"
+                        [class.fuel-vpower]="
+                          producto.nombre.toLowerCase() === 'v-power' ||
+                          producto.nombre.toLowerCase() === 'v power'
+                        "
+                      ></span>
+
                       {{ producto.nombre }}
+
                     </div>
+
                   </td>
 
                   <td class="money">
@@ -955,11 +1043,14 @@
         <article class="panel">
 
           <div class="panel-header">
+
             <div>
               <h3>Nueva estación</h3>
               <p>Registre una nueva estación de servicio</p>
             </div>
+
           </div>
+
 
           <form
             class="station-form"
@@ -967,6 +1058,7 @@
           >
 
             <div class="form-group">
+
               <label>Nombre</label>
 
               <input
@@ -975,10 +1067,12 @@
                 [(ngModel)]="nuevaEstacion.nombre"
                 placeholder="Ej. Shell Zona 1"
               >
+
             </div>
 
 
             <div class="form-group">
+
               <label>Dirección</label>
 
               <input
@@ -987,6 +1081,7 @@
                 [(ngModel)]="nuevaEstacion.direccion"
                 placeholder="Dirección de la estación"
               >
+
             </div>
 
 

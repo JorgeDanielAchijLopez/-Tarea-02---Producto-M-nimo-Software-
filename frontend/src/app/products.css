@@ -70,6 +70,38 @@
   font-weight: 800;
 }
 
+/* =========================
+   COLORES DE COMBUSTIBLE
+   ========================= */
+
+.product-fuel-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.fuel-regular {
+  background: #f4c430;
+  border: 1px solid #d9aa00;
+}
+
+.fuel-super {
+  background: #2e9d57;
+  border: 1px solid #217442;
+}
+
+.fuel-diesel {
+  background: #1f1f1f;
+  border: 1px solid #000000;
+}
+
+.fuel-vpower {
+  background: #d8211d;
+  border: 1px solid #b81714;
+}
+
 @media (max-width: 1000px) {
   .products-grid {
     grid-template-columns: 1fr;

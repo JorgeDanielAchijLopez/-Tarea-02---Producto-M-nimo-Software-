@@ -52,6 +52,13 @@ interface Venta {
   fecha: string;
 }
 
+interface Inventario {
+  id: number;
+  estacion_id: number;
+  producto_id: number;
+  galones_disponibles: number | string;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -60,7 +67,10 @@ interface Venta {
     FormsModule
   ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: [
+    './app.css',
+    './inventory.css'
+  ]
 })
 export class App implements OnInit {
 
@@ -71,10 +81,14 @@ export class App implements OnInit {
   productos: Producto[] = [];
   estaciones: Estacion[] = [];
   ventas: Venta[] = [];
+  inventarios: Inventario[] = [];
 
   cargando = false;
   error = '';
   mensaje = '';
+
+  inventarioEditandoId: number | null = null;
+  nuevaCantidadInventario = 0;
 
   nuevaVenta = {
     estacion_id: 0,
@@ -92,6 +106,7 @@ export class App implements OnInit {
     this.cargarProductos();
     this.cargarEstaciones();
     this.cargarVentas();
+    this.cargarInventario();
   }
 
   cambiarSeccion(seccion: string): void {
@@ -105,6 +120,10 @@ export class App implements OnInit {
 
     if (seccion === 'ventas') {
       this.cargarVentas();
+    }
+
+    if (seccion === 'inventario') {
+      this.cargarInventario();
     }
   }
 
@@ -165,7 +184,24 @@ export class App implements OnInit {
 
       error: (error) => {
         console.error('Error ventas:', error);
+
         this.error = 'No fue posible cargar las ventas.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cargarInventario(): void {
+    this.http.get<Inventario[]>('/api/inventario').subscribe({
+      next: (data) => {
+        this.inventarios = data;
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('Error inventario:', error);
+
+        this.error = 'No fue posible cargar el inventario.';
         this.cdr.detectChanges();
       }
     });
@@ -188,7 +224,6 @@ export class App implements OnInit {
       '/api/ventas',
       this.nuevaVenta
     ).subscribe({
-
       next: () => {
         this.mensaje = 'Venta registrada correctamente.';
 
@@ -199,6 +234,7 @@ export class App implements OnInit {
         };
 
         this.cargarVentas();
+        this.cargarInventario();
         this.cargarDashboard();
 
         this.cdr.detectChanges();
@@ -211,6 +247,63 @@ export class App implements OnInit {
           this.error = error.error.detail;
         } else {
           this.error = 'No fue posible registrar la venta.';
+        }
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  editarInventario(item: Inventario): void {
+    this.inventarioEditandoId = item.id;
+    this.nuevaCantidadInventario =
+      Number(item.galones_disponibles);
+
+    this.error = '';
+    this.mensaje = '';
+  }
+
+  cancelarEdicionInventario(): void {
+    this.inventarioEditandoId = null;
+    this.nuevaCantidadInventario = 0;
+  }
+
+  guardarInventario(item: Inventario): void {
+    this.error = '';
+    this.mensaje = '';
+
+    if (this.nuevaCantidadInventario < 0) {
+      this.error = 'El inventario no puede ser negativo.';
+      return;
+    }
+
+    const datos = {
+      galones_disponibles: this.nuevaCantidadInventario
+    };
+
+    this.http.put<Inventario>(
+      `/api/inventario/${item.id}`,
+      datos
+    ).subscribe({
+      next: () => {
+        this.mensaje = 'Inventario actualizado correctamente.';
+
+        this.inventarioEditandoId = null;
+        this.nuevaCantidadInventario = 0;
+
+        this.cargarInventario();
+        this.cargarDashboard();
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('Error actualizando inventario:', error);
+
+        if (error.error?.detail) {
+          this.error = error.error.detail;
+        } else {
+          this.error = 'No fue posible actualizar el inventario.';
         }
 
         this.cdr.detectChanges();
@@ -236,6 +329,20 @@ export class App implements OnInit {
     return estacion
       ? estacion.nombre
       : `Estacion ${estacionId}`;
+  }
+
+  estadoInventario(cantidad: number | string): string {
+    const valor = Number(cantidad);
+
+    if (valor < 500) {
+      return 'Crítico';
+    }
+
+    if (valor < 1000) {
+      return 'Bajo';
+    }
+
+    return 'Estable';
   }
 
   numero(valor: number | string): number {

@@ -31,7 +31,11 @@
         Ventas
       </a>
 
-      <a class="nav-item">
+      <a
+        class="nav-item"
+        [class.active]="seccionActiva === 'inventario'"
+        (click)="cambiarSeccion('inventario')"
+      >
         <span class="nav-icon">▤</span>
         Inventario
       </a>
@@ -58,13 +62,16 @@
 
   <main class="main-content">
 
+    <!-- =========================
+         DASHBOARD
+         ========================= -->
+
     @if (seccionActiva === 'dashboard') {
 
       <header class="topbar">
 
         <div>
           <p class="eyebrow">Panel administrativo</p>
-
           <h2>Dashboard</h2>
 
           <p class="subtitle">
@@ -306,13 +313,16 @@
     }
 
 
+    <!-- =========================
+         VENTAS
+         ========================= -->
+
     @if (seccionActiva === 'ventas') {
 
       <header class="topbar">
 
         <div>
           <p class="eyebrow">Operaciones</p>
-
           <h2>Ventas</h2>
 
           <p class="subtitle">
@@ -369,10 +379,7 @@
                   Seleccione una estación
                 </option>
 
-                @for (
-                  estacion of estaciones;
-                  track estacion.id
-                ) {
+                @for (estacion of estaciones; track estacion.id) {
 
                   <option [ngValue]="estacion.id">
                     {{ estacion.nombre }}
@@ -398,10 +405,7 @@
                   Seleccione un producto
                 </option>
 
-                @for (
-                  producto of productos;
-                  track producto.id
-                ) {
+                @for (producto of productos; track producto.id) {
 
                   <option [ngValue]="producto.id">
                     {{ producto.nombre }}
@@ -551,6 +555,234 @@
 
                   <td>
                     {{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    }
+
+
+    <!-- =========================
+         INVENTARIO
+         ========================= -->
+
+    @if (seccionActiva === 'inventario') {
+
+      <header class="topbar">
+
+        <div>
+          <p class="eyebrow">Control de combustible</p>
+          <h2>Inventario</h2>
+
+          <p class="subtitle">
+            Existencias disponibles por estación y combustible
+          </p>
+        </div>
+
+        <button
+          class="refresh-button"
+          (click)="cargarInventario()"
+        >
+          Actualizar
+        </button>
+
+      </header>
+
+
+      @if (mensaje) {
+        <div class="success-message">
+          {{ mensaje }}
+        </div>
+      }
+
+
+      @if (error) {
+        <div class="form-error">
+          {{ error }}
+        </div>
+      }
+
+
+      <section class="inventory-summary">
+
+        <article class="mini-stat">
+
+          <span>Registros</span>
+
+          <strong>
+            {{ inventarios.length }}
+          </strong>
+
+          <small>Inventarios registrados</small>
+
+        </article>
+
+
+        <article class="mini-stat">
+
+          <span>Inventario total</span>
+
+          <strong>
+            @if (dashboard) {
+              {{
+                numero(dashboard.inventario_total)
+                | number:'1.3-3'
+              }}
+            } @else {
+              0
+            }
+          </strong>
+
+          <small>Galones disponibles</small>
+
+        </article>
+
+      </section>
+
+
+      <section class="panel">
+
+        <div class="panel-header">
+
+          <div>
+            <h3>Existencias de combustible</h3>
+            <p>Consulte y actualice los niveles disponibles</p>
+          </div>
+
+          <span class="badge">
+            {{ inventarios.length }} registros
+          </span>
+
+        </div>
+
+
+        <div class="table-container">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>ID</th>
+                <th>Estación</th>
+                <th>Producto</th>
+                <th>Galones disponibles</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              @for (item of inventarios; track item.id) {
+
+                <tr>
+
+                  <td>#{{ item.id }}</td>
+
+                  <td>
+                    {{ obtenerEstacion(item.estacion_id) }}
+                  </td>
+
+                  <td>
+
+                    <div class="fuel-name">
+                      <span class="fuel-dot"></span>
+                      {{ obtenerProducto(item.producto_id) }}
+                    </div>
+
+                  </td>
+
+
+                  <td>
+
+                    @if (inventarioEditandoId === item.id) {
+
+                      <input
+                        class="inventory-input"
+                        type="number"
+                        [(ngModel)]="nuevaCantidadInventario"
+                        min="0"
+                        step="0.001"
+                      >
+
+                    } @else {
+
+                      <strong>
+                        {{
+                          numero(item.galones_disponibles)
+                          | number:'1.3-3'
+                        }}
+                      </strong>
+
+                      gal
+
+                    }
+
+                  </td>
+
+
+                  <td>
+
+                    <span
+                      class="inventory-status"
+                      [class.status-critical]="numero(item.galones_disponibles) < 500"
+                      [class.status-low]="
+                        numero(item.galones_disponibles) >= 500 &&
+                        numero(item.galones_disponibles) < 1000
+                      "
+                      [class.status-ok]="numero(item.galones_disponibles) >= 1000"
+                    >
+                      {{ estadoInventario(item.galones_disponibles) }}
+                    </span>
+
+                  </td>
+
+
+                  <td>
+
+                    @if (inventarioEditandoId === item.id) {
+
+                      <div class="action-buttons">
+
+                        <button
+                          class="save-button"
+                          (click)="guardarInventario(item)"
+                        >
+                          Guardar
+                        </button>
+
+                        <button
+                          class="cancel-button"
+                          (click)="cancelarEdicionInventario()"
+                        >
+                          Cancelar
+                        </button>
+
+                      </div>
+
+                    } @else {
+
+                      <button
+                        class="edit-button"
+                        (click)="editarInventario(item)"
+                      >
+                        Editar
+                      </button>
+
+                    }
+
                   </td>
 
                 </tr>

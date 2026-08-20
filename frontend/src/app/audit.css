@@ -1,0 +1,129 @@
+.station-filter-panel {
+  margin-bottom: 24px;
+}
+
+.station-filter-row {
+  display: flex;
+  align-items: end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.station-filter-group {
+  flex: 1;
+  min-width: 280px;
+}
+
+.station-filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #444444;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.station-filter-group select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 14px;
+  outline: none;
+}
+
+.station-filter-group select:focus {
+  border-color: #d8211d;
+  box-shadow: 0 0 0 3px rgba(216, 33, 29, 0.08);
+}
+
+.selected-station {
+  min-width: 250px;
+  padding: 12px 18px;
+  border: 1px solid #f0df85;
+  border-radius: 12px;
+  background: #fff8d8;
+}
+
+.selected-station span {
+  display: block;
+  color: #777777;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.selected-station strong {
+  color: #333333;
+  font-size: 15px;
+}
+
+.audit-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.audit-card {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.audit-card span {
+  display: block;
+  color: #777777;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.audit-card strong {
+  display: block;
+  margin: 10px 0 5px;
+  color: #252525;
+  font-size: 27px;
+}
+
+.audit-card small {
+  color: #909090;
+}
+
+.audit-section {
+  margin-bottom: 24px;
+}
+
+.empty-station {
+  padding: 50px 25px;
+  text-align: center;
+  color: #777777;
+}
+
+.empty-station strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333333;
+  font-size: 18px;
+}
+
+@media (max-width: 1100px) {
+  .audit-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .audit-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .station-filter-row {
+    display: block;
+  }
+
+  .selected-station {
+    margin-top: 15px;
+  }
+}

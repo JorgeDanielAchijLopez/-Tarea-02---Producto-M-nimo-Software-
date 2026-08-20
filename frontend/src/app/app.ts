@@ -71,7 +71,8 @@ interface Inventario {
     './app.css',
     './inventory.css',
     './products.css',
-    './stations.css'
+    './stations.css',
+    './audit.css'
   ]
 })
 export class App implements OnInit {
@@ -88,6 +89,9 @@ export class App implements OnInit {
   cargando = false;
   error = '';
   mensaje = '';
+
+  estacionInventarioFiltro = 0;
+  estacionAuditoriaFiltro = 0;
 
   inventarioEditandoId: number | null = null;
   nuevaCantidadInventario = 0;
@@ -127,6 +131,39 @@ export class App implements OnInit {
     this.cargarInventario();
   }
 
+  get inventariosFiltrados(): Inventario[] {
+    if (this.estacionInventarioFiltro <= 0) {
+      return [];
+    }
+
+    return this.inventarios.filter(
+      item =>
+        item.estacion_id === this.estacionInventarioFiltro
+    );
+  }
+
+  get inventarioAuditoria(): Inventario[] {
+    if (this.estacionAuditoriaFiltro <= 0) {
+      return [];
+    }
+
+    return this.inventarios.filter(
+      item =>
+        item.estacion_id === this.estacionAuditoriaFiltro
+    );
+  }
+
+  get ventasAuditoria(): Venta[] {
+    if (this.estacionAuditoriaFiltro <= 0) {
+      return [];
+    }
+
+    return this.ventas.filter(
+      venta =>
+        venta.estacion_id === this.estacionAuditoriaFiltro
+    );
+  }
+
   cambiarSeccion(seccion: string): void {
     this.seccionActiva = seccion;
     this.error = '';
@@ -142,6 +179,8 @@ export class App implements OnInit {
 
     if (seccion === 'inventario') {
       this.cargarInventario();
+      this.cargarEstaciones();
+      this.cargarProductos();
     }
 
     if (seccion === 'productos') {
@@ -150,6 +189,13 @@ export class App implements OnInit {
 
     if (seccion === 'estaciones') {
       this.cargarEstaciones();
+    }
+
+    if (seccion === 'auditoria') {
+      this.cargarVentas();
+      this.cargarInventario();
+      this.cargarEstaciones();
+      this.cargarProductos();
     }
   }
 
@@ -195,6 +241,20 @@ export class App implements OnInit {
     this.http.get<Estacion[]>('/api/estaciones').subscribe({
       next: (data) => {
         this.estaciones = data;
+
+        if (this.estaciones.length > 0) {
+
+          if (this.estacionInventarioFiltro === 0) {
+            this.estacionInventarioFiltro =
+              this.estaciones[0].id;
+          }
+
+          if (this.estacionAuditoriaFiltro === 0) {
+            this.estacionAuditoriaFiltro =
+              this.estaciones[0].id;
+          }
+        }
+
         this.cdr.detectChanges();
       },
 
@@ -248,7 +308,8 @@ export class App implements OnInit {
       this.nuevaVenta.producto_id <= 0 ||
       this.nuevaVenta.galones <= 0
     ) {
-      this.error = 'Debe completar todos los datos de la venta.';
+      this.error =
+        'Debe completar todos los datos de la venta.';
       return;
     }
 
@@ -257,7 +318,8 @@ export class App implements OnInit {
       this.nuevaVenta
     ).subscribe({
       next: () => {
-        this.mensaje = 'Venta registrada correctamente.';
+        this.mensaje =
+          'Venta registrada correctamente.';
 
         this.nuevaVenta = {
           estacion_id: 0,
@@ -273,12 +335,16 @@ export class App implements OnInit {
       },
 
       error: (error) => {
-        console.error('Error al registrar venta:', error);
+        console.error(
+          'Error al registrar venta:',
+          error
+        );
 
         if (error.error?.detail) {
           this.error = error.error.detail;
         } else {
-          this.error = 'No fue posible registrar la venta.';
+          this.error =
+            'No fue posible registrar la venta.';
         }
 
         this.cdr.detectChanges();
@@ -294,7 +360,8 @@ export class App implements OnInit {
       this.nuevoProducto.nombre.trim().length < 2 ||
       this.nuevoProducto.precio_galon <= 0
     ) {
-      this.error = 'Ingrese un nombre y un precio válido.';
+      this.error =
+        'Ingrese un nombre y un precio válido.';
       return;
     }
 
@@ -303,7 +370,8 @@ export class App implements OnInit {
       this.nuevoProducto
     ).subscribe({
       next: () => {
-        this.mensaje = 'Producto registrado correctamente.';
+        this.mensaje =
+          'Producto registrado correctamente.';
 
         this.nuevoProducto = {
           nombre: '',
@@ -317,12 +385,16 @@ export class App implements OnInit {
       },
 
       error: (error) => {
-        console.error('Error registrando producto:', error);
+        console.error(
+          'Error registrando producto:',
+          error
+        );
 
         if (error.error?.detail) {
           this.error = error.error.detail;
         } else {
-          this.error = 'No fue posible registrar el producto.';
+          this.error =
+            'No fue posible registrar el producto.';
         }
 
         this.cdr.detectChanges();
@@ -338,7 +410,8 @@ export class App implements OnInit {
       this.nuevaEstacion.nombre.trim().length < 3 ||
       this.nuevaEstacion.direccion.trim().length < 5
     ) {
-      this.error = 'Ingrese un nombre y una dirección válidos.';
+      this.error =
+        'Ingrese un nombre y una dirección válidos.';
       return;
     }
 
@@ -346,8 +419,12 @@ export class App implements OnInit {
       '/api/estaciones',
       this.nuevaEstacion
     ).subscribe({
-      next: () => {
-        this.mensaje = 'Estación registrada correctamente.';
+      next: (estacion) => {
+        this.mensaje =
+          'Estación registrada correctamente.';
+
+        this.estacionInventarioFiltro = estacion.id;
+        this.estacionAuditoriaFiltro = estacion.id;
 
         this.nuevaEstacion = {
           nombre: '',
@@ -361,12 +438,16 @@ export class App implements OnInit {
       },
 
       error: (error) => {
-        console.error('Error registrando estación:', error);
+        console.error(
+          'Error registrando estación:',
+          error
+        );
 
         if (error.error?.detail) {
           this.error = error.error.detail;
         } else {
-          this.error = 'No fue posible registrar la estación.';
+          this.error =
+            'No fue posible registrar la estación.';
         }
 
         this.cdr.detectChanges();
@@ -390,8 +471,10 @@ export class App implements OnInit {
 
     const existe = this.inventarios.some(
       item =>
-        item.estacion_id === this.nuevoInventario.estacion_id &&
-        item.producto_id === this.nuevoInventario.producto_id
+        item.estacion_id ===
+          this.nuevoInventario.estacion_id &&
+        item.producto_id ===
+          this.nuevoInventario.producto_id
     );
 
     if (existe) {
@@ -400,6 +483,9 @@ export class App implements OnInit {
       return;
     }
 
+    const estacionAsignada =
+      this.nuevoInventario.estacion_id;
+
     this.http.post<Inventario>(
       '/api/inventario',
       this.nuevoInventario
@@ -407,6 +493,9 @@ export class App implements OnInit {
       next: () => {
         this.mensaje =
           'Producto asignado a la estación correctamente.';
+
+        this.estacionInventarioFiltro =
+          estacionAsignada;
 
         this.nuevoInventario = {
           estacion_id: 0,
@@ -421,7 +510,10 @@ export class App implements OnInit {
       },
 
       error: (error) => {
-        console.error('Error registrando inventario:', error);
+        console.error(
+          'Error registrando inventario:',
+          error
+        );
 
         if (error.error?.detail) {
           this.error = error.error.detail;
@@ -455,12 +547,14 @@ export class App implements OnInit {
     this.mensaje = '';
 
     if (this.nuevaCantidadInventario < 0) {
-      this.error = 'El inventario no puede ser negativo.';
+      this.error =
+        'El inventario no puede ser negativo.';
       return;
     }
 
     const datos = {
-      galones_disponibles: this.nuevaCantidadInventario
+      galones_disponibles:
+        this.nuevaCantidadInventario
     };
 
     this.http.put<Inventario>(
@@ -481,7 +575,10 @@ export class App implements OnInit {
       },
 
       error: (error) => {
-        console.error('Error actualizando inventario:', error);
+        console.error(
+          'Error actualizando inventario:',
+          error
+        );
 
         if (error.error?.detail) {
           this.error = error.error.detail;
@@ -515,7 +612,10 @@ export class App implements OnInit {
       : `Estacion ${estacionId}`;
   }
 
-  estadoInventario(cantidad: number | string): string {
+  estadoInventario(
+    cantidad: number | string
+  ): string {
+
     const valor = Number(cantidad);
 
     if (valor < 500) {
@@ -555,6 +655,37 @@ export class App implements OnInit {
     }
 
     return '';
+  }
+
+  totalInventarioEstacion(
+    estacionId: number
+  ): number {
+
+    return this.inventarios
+      .filter(
+        item => item.estacion_id === estacionId
+      )
+      .reduce(
+        (total, item) =>
+          total + Number(item.galones_disponibles),
+        0
+      );
+  }
+
+  galonesVendidosAuditoria(): number {
+    return this.ventasAuditoria.reduce(
+      (total, venta) =>
+        total + Number(venta.galones),
+      0
+    );
+  }
+
+  ingresosAuditoria(): number {
+    return this.ventasAuditoria.reduce(
+      (total, venta) =>
+        total + Number(venta.total),
+      0
+    );
   }
 
   numero(valor: number | string): number {

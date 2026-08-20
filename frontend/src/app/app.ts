@@ -59,6 +59,13 @@ interface Inventario {
   galones_disponibles: number | string;
 }
 
+interface EliminacionEstacionResponse {
+  message: string;
+  estacion: string;
+  inventarios_eliminados: number;
+  ventas_eliminadas: number;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -242,17 +249,30 @@ export class App implements OnInit {
       next: (data) => {
         this.estaciones = data;
 
-        if (this.estaciones.length > 0) {
+        const inventarioFiltroExiste =
+          this.estaciones.some(
+            estacion =>
+              estacion.id === this.estacionInventarioFiltro
+          );
 
-          if (this.estacionInventarioFiltro === 0) {
-            this.estacionInventarioFiltro =
-              this.estaciones[0].id;
-          }
+        const auditoriaFiltroExiste =
+          this.estaciones.some(
+            estacion =>
+              estacion.id === this.estacionAuditoriaFiltro
+          );
 
-          if (this.estacionAuditoriaFiltro === 0) {
-            this.estacionAuditoriaFiltro =
-              this.estaciones[0].id;
-          }
+        if (!inventarioFiltroExiste) {
+          this.estacionInventarioFiltro =
+            this.estaciones.length > 0
+              ? this.estaciones[0].id
+              : 0;
+        }
+
+        if (!auditoriaFiltroExiste) {
+          this.estacionAuditoriaFiltro =
+            this.estaciones.length > 0
+              ? this.estaciones[0].id
+              : 0;
         }
 
         this.cdr.detectChanges();
@@ -448,6 +468,82 @@ export class App implements OnInit {
         } else {
           this.error =
             'No fue posible registrar la estación.';
+        }
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  eliminarEstacion(estacion: Estacion): void {
+    this.error = '';
+    this.mensaje = '';
+
+    const confirmar = window.confirm(
+      `¿Está seguro de eliminar "${estacion.nombre}"?\n\n` +
+      `También se eliminarán:\n` +
+      `- Todo su inventario\n` +
+      `- Todas sus ventas\n` +
+      `- Sus datos derivados de auditoría\n\n` +
+      `Esta acción no se puede deshacer.`
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    this.http.delete<EliminacionEstacionResponse>(
+      `/api/estaciones/${estacion.id}`
+    ).subscribe({
+      next: (respuesta) => {
+        this.mensaje =
+          `${respuesta.estacion} eliminada correctamente. ` +
+          `Inventarios eliminados: ${respuesta.inventarios_eliminados}. ` +
+          `Ventas eliminadas: ${respuesta.ventas_eliminadas}.`;
+
+        if (
+          this.estacionInventarioFiltro === estacion.id
+        ) {
+          this.estacionInventarioFiltro = 0;
+        }
+
+        if (
+          this.estacionAuditoriaFiltro === estacion.id
+        ) {
+          this.estacionAuditoriaFiltro = 0;
+        }
+
+        if (
+          this.nuevaVenta.estacion_id === estacion.id
+        ) {
+          this.nuevaVenta.estacion_id = 0;
+        }
+
+        if (
+          this.nuevoInventario.estacion_id === estacion.id
+        ) {
+          this.nuevoInventario.estacion_id = 0;
+        }
+
+        this.cargarEstaciones();
+        this.cargarInventario();
+        this.cargarVentas();
+        this.cargarDashboard();
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error(
+          'Error eliminando estación:',
+          error
+        );
+
+        if (error.error?.detail) {
+          this.error = error.error.detail;
+        } else {
+          this.error =
+            'No fue posible eliminar la estación.';
         }
 
         this.cdr.detectChanges();

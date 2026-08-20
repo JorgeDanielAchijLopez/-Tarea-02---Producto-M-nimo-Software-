@@ -101,7 +101,11 @@ def crear_producto(
     response_model=list[schemas.ProductoResponse]
 )
 def listar_productos(db: Session = Depends(get_db)):
-    return db.query(models.Producto).order_by(models.Producto.id).all()
+    return (
+        db.query(models.Producto)
+        .order_by(models.Producto.id)
+        .all()
+    )
 
 
 @app.get(
@@ -170,7 +174,11 @@ def crear_estacion(
     response_model=list[schemas.EstacionResponse]
 )
 def listar_estaciones(db: Session = Depends(get_db)):
-    return db.query(models.Estacion).order_by(models.Estacion.id).all()
+    return (
+        db.query(models.Estacion)
+        .order_by(models.Estacion.id)
+        .all()
+    )
 
 
 @app.get(
@@ -196,6 +204,68 @@ def obtener_estacion(
     return estacion
 
 
+@app.delete(
+    "/estaciones/{estacion_id}",
+    status_code=status.HTTP_200_OK
+)
+def eliminar_estacion(
+    estacion_id: int,
+    db: Session = Depends(get_db)
+):
+    estacion = (
+        db.query(models.Estacion)
+        .filter(models.Estacion.id == estacion_id)
+        .first()
+    )
+
+    if not estacion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Estacion no encontrada"
+        )
+
+    nombre_estacion = estacion.nombre
+
+    try:
+        ventas_eliminadas = (
+            db.query(models.Venta)
+            .filter(
+                models.Venta.estacion_id == estacion_id
+            )
+            .delete(
+                synchronize_session=False
+            )
+        )
+
+        inventarios_eliminados = (
+            db.query(models.Inventario)
+            .filter(
+                models.Inventario.estacion_id == estacion_id
+            )
+            .delete(
+                synchronize_session=False
+            )
+        )
+
+        db.delete(estacion)
+        db.commit()
+
+        return {
+            "message": "Estacion eliminada correctamente",
+            "estacion": nombre_estacion,
+            "inventarios_eliminados": inventarios_eliminados,
+            "ventas_eliminadas": ventas_eliminadas
+        }
+
+    except SQLAlchemyError:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No fue posible eliminar la estacion"
+        )
+
+
 # =========================
 # INVENTARIO
 # =========================
@@ -211,7 +281,9 @@ def crear_inventario(
 ):
     estacion = (
         db.query(models.Estacion)
-        .filter(models.Estacion.id == inventario.estacion_id)
+        .filter(
+            models.Estacion.id == inventario.estacion_id
+        )
         .first()
     )
 
@@ -223,7 +295,9 @@ def crear_inventario(
 
     producto = (
         db.query(models.Producto)
-        .filter(models.Producto.id == inventario.producto_id)
+        .filter(
+            models.Producto.id == inventario.producto_id
+        )
         .first()
     )
 
@@ -236,8 +310,11 @@ def crear_inventario(
     inventario_existente = (
         db.query(models.Inventario)
         .filter(
-            models.Inventario.estacion_id == inventario.estacion_id,
-            models.Inventario.producto_id == inventario.producto_id
+            models.Inventario.estacion_id
+            == inventario.estacion_id,
+
+            models.Inventario.producto_id
+            == inventario.producto_id
         )
         .first()
     )
@@ -265,8 +342,14 @@ def crear_inventario(
     "/inventario",
     response_model=list[schemas.InventarioResponse]
 )
-def listar_inventario(db: Session = Depends(get_db)):
-    return db.query(models.Inventario).order_by(models.Inventario.id).all()
+def listar_inventario(
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(models.Inventario)
+        .order_by(models.Inventario.id)
+        .all()
+    )
 
 
 @app.get(
@@ -279,7 +362,9 @@ def obtener_inventario(
 ):
     inventario = (
         db.query(models.Inventario)
-        .filter(models.Inventario.id == inventario_id)
+        .filter(
+            models.Inventario.id == inventario_id
+        )
         .first()
     )
 
@@ -303,7 +388,9 @@ def actualizar_inventario(
 ):
     inventario = (
         db.query(models.Inventario)
-        .filter(models.Inventario.id == inventario_id)
+        .filter(
+            models.Inventario.id == inventario_id
+        )
         .first()
     )
 
@@ -313,7 +400,9 @@ def actualizar_inventario(
             detail="Registro de inventario no encontrado"
         )
 
-    inventario.galones_disponibles = datos.galones_disponibles
+    inventario.galones_disponibles = (
+        datos.galones_disponibles
+    )
 
     db.commit()
     db.refresh(inventario)
@@ -336,7 +425,9 @@ def crear_venta(
 ):
     estacion = (
         db.query(models.Estacion)
-        .filter(models.Estacion.id == venta.estacion_id)
+        .filter(
+            models.Estacion.id == venta.estacion_id
+        )
         .first()
     )
 
@@ -348,7 +439,9 @@ def crear_venta(
 
     producto = (
         db.query(models.Producto)
-        .filter(models.Producto.id == venta.producto_id)
+        .filter(
+            models.Producto.id == venta.producto_id
+        )
         .first()
     )
 
@@ -361,8 +454,11 @@ def crear_venta(
     inventario = (
         db.query(models.Inventario)
         .filter(
-            models.Inventario.estacion_id == venta.estacion_id,
-            models.Inventario.producto_id == venta.producto_id
+            models.Inventario.estacion_id
+            == venta.estacion_id,
+
+            models.Inventario.producto_id
+            == venta.producto_id
         )
         .with_for_update()
         .first()
@@ -380,10 +476,13 @@ def crear_venta(
             detail="Inventario insuficiente para realizar la venta"
         )
 
-    precio_galon = Decimal(producto.precio_galon)
+    precio_galon = Decimal(
+        producto.precio_galon
+    )
 
     total = (
-        Decimal(venta.galones) * precio_galon
+        Decimal(venta.galones)
+        * precio_galon
     ).quantize(
         Decimal("0.01"),
         rounding=ROUND_HALF_UP
@@ -398,7 +497,9 @@ def crear_venta(
             total=total
         )
 
-        inventario.galones_disponibles -= venta.galones
+        inventario.galones_disponibles -= (
+            venta.galones
+        )
 
         db.add(nueva_venta)
         db.commit()
@@ -419,8 +520,14 @@ def crear_venta(
     "/ventas",
     response_model=list[schemas.VentaResponse]
 )
-def listar_ventas(db: Session = Depends(get_db)):
-    return db.query(models.Venta).order_by(models.Venta.id.desc()).all()
+def listar_ventas(
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(models.Venta)
+        .order_by(models.Venta.id.desc())
+        .all()
+    )
 
 
 @app.get(
@@ -433,7 +540,9 @@ def obtener_venta(
 ):
     venta = (
         db.query(models.Venta)
-        .filter(models.Venta.id == venta_id)
+        .filter(
+            models.Venta.id == venta_id
+        )
         .first()
     )
 
@@ -454,49 +563,78 @@ def obtener_venta(
     "/dashboard",
     response_model=schemas.DashboardResponse
 )
-def obtener_dashboard(db: Session = Depends(get_db)):
+def obtener_dashboard(
+    db: Session = Depends(get_db)
+):
 
     total_ventas = (
-        db.query(func.count(models.Venta.id))
+        db.query(
+            func.count(models.Venta.id)
+        )
         .scalar()
     ) or 0
 
     ingresos_totales = (
-        db.query(func.sum(models.Venta.total))
+        db.query(
+            func.sum(models.Venta.total)
+        )
         .scalar()
     ) or Decimal("0.00")
 
     galones_vendidos = (
-        db.query(func.sum(models.Venta.galones))
+        db.query(
+            func.sum(models.Venta.galones)
+        )
         .scalar()
     ) or Decimal("0.000")
 
     inventario_total = (
-        db.query(func.sum(models.Inventario.galones_disponibles))
+        db.query(
+            func.sum(
+                models.Inventario.galones_disponibles
+            )
+        )
         .scalar()
     ) or Decimal("0.000")
 
     estaciones_activas = (
-        db.query(func.count(models.Estacion.id))
-        .filter(models.Estacion.estado == "Activa")
+        db.query(
+            func.count(models.Estacion.id)
+        )
+        .filter(
+            models.Estacion.estado == "Activa"
+        )
         .scalar()
     ) or 0
 
     ventas_producto = (
         db.query(
             models.Producto.nombre,
-            func.sum(models.Venta.galones).label("galones_vendidos"),
-            func.sum(models.Venta.total).label("total_vendido")
+
+            func.sum(
+                models.Venta.galones
+            ).label(
+                "galones_vendidos"
+            ),
+
+            func.sum(
+                models.Venta.total
+            ).label(
+                "total_vendido"
+            )
         )
         .outerjoin(
             models.Venta,
-            models.Venta.producto_id == models.Producto.id
+            models.Venta.producto_id
+            == models.Producto.id
         )
         .group_by(
             models.Producto.id,
             models.Producto.nombre
         )
-        .order_by(models.Producto.id)
+        .order_by(
+            models.Producto.id
+        )
         .all()
     )
 
@@ -506,26 +644,43 @@ def obtener_dashboard(db: Session = Depends(get_db)):
         ventas_por_producto.append(
             {
                 "producto": fila.nombre,
-                "galones_vendidos": fila.galones_vendidos or Decimal("0.000"),
-                "total_vendido": fila.total_vendido or Decimal("0.00")
+
+                "galones_vendidos":
+                    fila.galones_vendidos
+                    or Decimal("0.000"),
+
+                "total_vendido":
+                    fila.total_vendido
+                    or Decimal("0.00")
             }
         )
 
     inventarios_bajos = (
         db.query(
             models.Inventario,
-            models.Estacion.nombre.label("estacion_nombre"),
-            models.Producto.nombre.label("producto_nombre")
+
+            models.Estacion.nombre.label(
+                "estacion_nombre"
+            ),
+
+            models.Producto.nombre.label(
+                "producto_nombre"
+            )
         )
         .join(
             models.Estacion,
-            models.Inventario.estacion_id == models.Estacion.id
+            models.Inventario.estacion_id
+            == models.Estacion.id
         )
         .join(
             models.Producto,
-            models.Inventario.producto_id == models.Producto.id
+            models.Inventario.producto_id
+            == models.Producto.id
         )
-        .filter(models.Inventario.galones_disponibles < 500)
+        .filter(
+            models.Inventario.galones_disponibles
+            < 500
+        )
         .all()
     )
 
@@ -534,18 +689,37 @@ def obtener_dashboard(db: Session = Depends(get_db)):
     for fila in inventarios_bajos:
         inventario_bajo.append(
             {
-                "estacion": fila.estacion_nombre,
-                "producto": fila.producto_nombre,
-                "galones_disponibles": fila.Inventario.galones_disponibles
+                "estacion":
+                    fila.estacion_nombre,
+
+                "producto":
+                    fila.producto_nombre,
+
+                "galones_disponibles":
+                    fila.Inventario
+                    .galones_disponibles
             }
         )
 
     return {
-        "total_ventas": total_ventas,
-        "ingresos_totales": ingresos_totales,
-        "galones_vendidos": galones_vendidos,
-        "inventario_total": inventario_total,
-        "estaciones_activas": estaciones_activas,
-        "ventas_por_producto": ventas_por_producto,
-        "inventario_bajo": inventario_bajo
+        "total_ventas":
+            total_ventas,
+
+        "ingresos_totales":
+            ingresos_totales,
+
+        "galones_vendidos":
+            galones_vendidos,
+
+        "inventario_total":
+            inventario_total,
+
+        "estaciones_activas":
+            estaciones_activas,
+
+        "ventas_por_producto":
+            ventas_por_producto,
+
+        "inventario_bajo":
+            inventario_bajo
     }

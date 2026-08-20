@@ -70,6 +70,44 @@
   font-weight: 800;
 }
 
+.station-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-station-button {
+  border: 1px solid #efc1bf;
+  border-radius: 8px;
+  padding: 8px 13px;
+  background: #fff1f0;
+  color: #c21f1a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.delete-station-button:hover {
+  background: #d8211d;
+  border-color: #d8211d;
+  color: #ffffff;
+}
+
+.danger-info {
+  margin-bottom: 24px;
+  padding: 14px 18px;
+  border: 1px solid #f0cecc;
+  border-radius: 12px;
+  background: #fff8f7;
+  color: #7c3936;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.danger-info strong {
+  color: #b81714;
+}
+
 @media (max-width: 1000px) {
   .stations-grid {
     grid-template-columns: 1fr;

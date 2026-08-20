@@ -79,7 +79,7 @@
 
   <main class="main-content">
 
-    <!-- DASHBOARD GENERAL -->
+    <!-- DASHBOARD -->
 
     @if (seccionActiva === 'dashboard') {
 
@@ -108,22 +108,18 @@
 
 
       @if (cargando) {
-
         <section class="loading">
           <div class="loader"></div>
           <p>Cargando información...</p>
         </section>
-
       }
 
 
       @if (error && !cargando) {
-
         <section class="error-box">
           <strong>Error</strong>
           <p>{{ error }}</p>
         </section>
-
       }
 
 
@@ -660,7 +656,7 @@
     }
 
 
-    <!-- INVENTARIO FILTRADO -->
+    <!-- INVENTARIO -->
 
     @if (seccionActiva === 'inventario') {
 
@@ -1428,6 +1424,13 @@
       }
 
 
+      <div class="danger-info">
+        <strong>Eliminación controlada:</strong>
+        al eliminar una estación también se eliminarán
+        su inventario y todas sus ventas asociadas.
+      </div>
+
+
       <section class="stations-grid">
 
         <article class="panel">
@@ -1518,6 +1521,22 @@
 
       <section class="panel">
 
+        <div class="panel-header">
+
+          <div>
+            <h3>Red de estaciones</h3>
+            <p>
+              Estaciones registradas actualmente
+            </p>
+          </div>
+
+          <span class="badge">
+            {{ estaciones.length }} estaciones
+          </span>
+
+        </div>
+
+
         <div class="table-container">
 
           <table>
@@ -1528,6 +1547,7 @@
                 <th>Estación</th>
                 <th>Dirección</th>
                 <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
 
@@ -1540,7 +1560,9 @@
 
                 <tr>
 
-                  <td>#{{ estacion.id }}</td>
+                  <td>
+                    #{{ estacion.id }}
+                  </td>
 
                   <td>
                     <strong>
@@ -1559,6 +1581,24 @@
                     >
                       {{ estacion.estado }}
                     </span>
+
+                  </td>
+
+                  <td>
+
+                    <div class="station-actions">
+
+                      <button
+                        type="button"
+                        class="delete-station-button"
+                        (click)="
+                          eliminarEstacion(estacion)
+                        "
+                      >
+                        Eliminar
+                      </button>
+
+                    </div>
 
                   </td>
 

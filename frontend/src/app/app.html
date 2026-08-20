@@ -40,7 +40,11 @@
         Inventario
       </a>
 
-      <a class="nav-item">
+      <a
+        class="nav-item"
+        [class.active]="seccionActiva === 'productos'"
+        (click)="cambiarSeccion('productos')"
+      >
         <span class="nav-icon">◆</span>
         Productos
       </a>
@@ -62,9 +66,7 @@
 
   <main class="main-content">
 
-    <!-- =========================
-         DASHBOARD
-         ========================= -->
+    <!-- DASHBOARD -->
 
     @if (seccionActiva === 'dashboard') {
 
@@ -72,6 +74,7 @@
 
         <div>
           <p class="eyebrow">Panel administrativo</p>
+
           <h2>Dashboard</h2>
 
           <p class="subtitle">
@@ -313,9 +316,7 @@
     }
 
 
-    <!-- =========================
-         VENTAS
-         ========================= -->
+    <!-- VENTAS -->
 
     @if (seccionActiva === 'ventas') {
 
@@ -509,7 +510,6 @@
           <table>
 
             <thead>
-
               <tr>
                 <th>ID</th>
                 <th>Estación</th>
@@ -519,7 +519,6 @@
                 <th>Total</th>
                 <th>Fecha</th>
               </tr>
-
             </thead>
 
             <tbody>
@@ -572,9 +571,7 @@
     }
 
 
-    <!-- =========================
-         INVENTARIO
-         ========================= -->
+    <!-- INVENTARIO -->
 
     @if (seccionActiva === 'inventario') {
 
@@ -616,7 +613,6 @@
       <section class="inventory-summary">
 
         <article class="mini-stat">
-
           <span>Registros</span>
 
           <strong>
@@ -624,12 +620,10 @@
           </strong>
 
           <small>Inventarios registrados</small>
-
         </article>
 
 
         <article class="mini-stat">
-
           <span>Inventario total</span>
 
           <strong>
@@ -644,7 +638,6 @@
           </strong>
 
           <small>Galones disponibles</small>
-
         </article>
 
       </section>
@@ -671,7 +664,6 @@
           <table>
 
             <thead>
-
               <tr>
                 <th>ID</th>
                 <th>Estación</th>
@@ -680,7 +672,6 @@
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
-
             </thead>
 
             <tbody>
@@ -696,12 +687,10 @@
                   </td>
 
                   <td>
-
                     <div class="fuel-name">
                       <span class="fuel-dot"></span>
                       {{ obtenerProducto(item.producto_id) }}
                     </div>
-
                   </td>
 
 
@@ -783,6 +772,201 @@
 
                     }
 
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    }
+
+
+    <!-- PRODUCTOS -->
+
+    @if (seccionActiva === 'productos') {
+
+      <header class="topbar">
+
+        <div>
+          <p class="eyebrow">Catálogo</p>
+          <h2>Productos</h2>
+
+          <p class="subtitle">
+            Administración de combustibles y precios por galón
+          </p>
+        </div>
+
+        <button
+          class="refresh-button"
+          (click)="cargarProductos()"
+        >
+          Actualizar
+        </button>
+
+      </header>
+
+
+      @if (mensaje) {
+        <div class="success-message">
+          {{ mensaje }}
+        </div>
+      }
+
+
+      @if (error) {
+        <div class="form-error">
+          {{ error }}
+        </div>
+      }
+
+
+      <section class="products-grid">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <h3>Nuevo producto</h3>
+              <p>Registre un nuevo tipo de combustible</p>
+            </div>
+
+          </div>
+
+
+          <form
+            class="product-form"
+            (ngSubmit)="registrarProducto()"
+          >
+
+            <div class="form-group">
+
+              <label>Nombre</label>
+
+              <input
+                type="text"
+                name="nombreProducto"
+                [(ngModel)]="nuevoProducto.nombre"
+                placeholder="Nombre del combustible"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>Precio por galón</label>
+
+              <input
+                type="number"
+                name="precioProducto"
+                [(ngModel)]="nuevoProducto.precio_galon"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
+              >
+
+            </div>
+
+
+            <button
+              type="submit"
+              class="primary-button"
+            >
+              Registrar producto
+            </button>
+
+          </form>
+
+        </article>
+
+
+        <article class="product-summary-card">
+
+          <div class="product-summary-icon">
+            ◆
+          </div>
+
+          <span>Productos registrados</span>
+
+          <strong>
+            {{ productos.length }}
+          </strong>
+
+          <small>
+            Combustibles disponibles en el sistema
+          </small>
+
+        </article>
+
+      </section>
+
+
+      <section class="panel">
+
+        <div class="panel-header">
+
+          <div>
+            <h3>Catálogo de combustibles</h3>
+            <p>Productos y precios actualmente registrados</p>
+          </div>
+
+          <span class="badge">
+            {{ productos.length }} productos
+          </span>
+
+        </div>
+
+
+        <div class="table-container">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Precio por galón</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (producto of productos; track producto.id) {
+
+                <tr>
+
+                  <td>#{{ producto.id }}</td>
+
+                  <td>
+
+                    <div class="fuel-name">
+                      <span class="fuel-dot"></span>
+                      {{ producto.nombre }}
+                    </div>
+
+                  </td>
+
+                  <td class="money">
+                    Q {{
+                      numero(producto.precio_galon)
+                      | number:'1.2-2'
+                    }}
+                  </td>
+
+                  <td>
+                    <span class="product-active">
+                      Disponible
+                    </span>
                   </td>
 
                 </tr>

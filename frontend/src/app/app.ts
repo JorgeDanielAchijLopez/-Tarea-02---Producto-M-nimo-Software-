@@ -69,7 +69,8 @@ interface Inventario {
   templateUrl: './app.html',
   styleUrls: [
     './app.css',
-    './inventory.css'
+    './inventory.css',
+    './products.css'
   ]
 })
 export class App implements OnInit {
@@ -94,6 +95,11 @@ export class App implements OnInit {
     estacion_id: 0,
     producto_id: 0,
     galones: 0
+  };
+
+  nuevoProducto = {
+    nombre: '',
+    precio_galon: 0
   };
 
   constructor(
@@ -124,6 +130,10 @@ export class App implements OnInit {
 
     if (seccion === 'inventario') {
       this.cargarInventario();
+    }
+
+    if (seccion === 'productos') {
+      this.cargarProductos();
     }
   }
 
@@ -158,6 +168,9 @@ export class App implements OnInit {
 
       error: (error) => {
         console.error('Error productos:', error);
+
+        this.error = 'No fue posible cargar los productos.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -254,8 +267,53 @@ export class App implements OnInit {
     });
   }
 
+  registrarProducto(): void {
+    this.error = '';
+    this.mensaje = '';
+
+    if (
+      this.nuevoProducto.nombre.trim().length < 2 ||
+      this.nuevoProducto.precio_galon <= 0
+    ) {
+      this.error = 'Ingrese un nombre y un precio válido.';
+      return;
+    }
+
+    this.http.post<Producto>(
+      '/api/productos',
+      this.nuevoProducto
+    ).subscribe({
+      next: () => {
+        this.mensaje = 'Producto registrado correctamente.';
+
+        this.nuevoProducto = {
+          nombre: '',
+          precio_galon: 0
+        };
+
+        this.cargarProductos();
+        this.cargarDashboard();
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('Error registrando producto:', error);
+
+        if (error.error?.detail) {
+          this.error = error.error.detail;
+        } else {
+          this.error = 'No fue posible registrar el producto.';
+        }
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   editarInventario(item: Inventario): void {
     this.inventarioEditandoId = item.id;
+
     this.nuevaCantidadInventario =
       Number(item.galones_disponibles);
 

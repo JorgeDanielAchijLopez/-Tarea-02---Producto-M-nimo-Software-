@@ -70,7 +70,8 @@ interface Inventario {
   styleUrls: [
     './app.css',
     './inventory.css',
-    './products.css'
+    './products.css',
+    './stations.css'
   ]
 })
 export class App implements OnInit {
@@ -100,6 +101,11 @@ export class App implements OnInit {
   nuevoProducto = {
     nombre: '',
     precio_galon: 0
+  };
+
+  nuevaEstacion = {
+    nombre: '',
+    direccion: ''
   };
 
   constructor(
@@ -134,6 +140,10 @@ export class App implements OnInit {
 
     if (seccion === 'productos') {
       this.cargarProductos();
+    }
+
+    if (seccion === 'estaciones') {
+      this.cargarEstaciones();
     }
   }
 
@@ -184,6 +194,9 @@ export class App implements OnInit {
 
       error: (error) => {
         console.error('Error estaciones:', error);
+
+        this.error = 'No fue posible cargar las estaciones.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -304,6 +317,50 @@ export class App implements OnInit {
           this.error = error.error.detail;
         } else {
           this.error = 'No fue posible registrar el producto.';
+        }
+
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  registrarEstacion(): void {
+    this.error = '';
+    this.mensaje = '';
+
+    if (
+      this.nuevaEstacion.nombre.trim().length < 3 ||
+      this.nuevaEstacion.direccion.trim().length < 5
+    ) {
+      this.error = 'Ingrese un nombre y una dirección válidos.';
+      return;
+    }
+
+    this.http.post<Estacion>(
+      '/api/estaciones',
+      this.nuevaEstacion
+    ).subscribe({
+      next: () => {
+        this.mensaje = 'Estación registrada correctamente.';
+
+        this.nuevaEstacion = {
+          nombre: '',
+          direccion: ''
+        };
+
+        this.cargarEstaciones();
+        this.cargarDashboard();
+
+        this.cdr.detectChanges();
+      },
+
+      error: (error) => {
+        console.error('Error registrando estación:', error);
+
+        if (error.error?.detail) {
+          this.error = error.error.detail;
+        } else {
+          this.error = 'No fue posible registrar la estación.';
         }
 
         this.cdr.detectChanges();

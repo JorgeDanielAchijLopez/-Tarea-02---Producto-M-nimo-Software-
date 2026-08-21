@@ -15,7 +15,7 @@ Proyecto desarrollado para el curso de **Análisis de Sistemas II** de la **Univ
 | **Curso** | Análisis de Sistemas II |
 | **Catedrático** | Ing. ERICK EDUARDO PEREZ AGUILAR |
 | **Proyecto** | Shell Fuel Control |
-| **Versión** | 1.0.0 |
+| **Versión** | v1.0.0 |
 
 ---
 
@@ -26,14 +26,14 @@ Proyecto desarrollado para el curso de **Análisis de Sistemas II** de la **Univ
 El sistema permite administrar:
 
 - Estaciones.
-- Productos/combustibles.
+- Productos y combustibles.
 - Inventario por estación.
 - Ventas.
 - Auditoría individual por estación.
 - Indicadores generales.
 - Reportes mediante Power BI.
 
-El proyecto está construido utilizando una arquitectura Backend-Frontend conectada a una base de datos PostgreSQL.
+El proyecto utiliza una arquitectura Backend-Frontend conectada a una base de datos PostgreSQL.
 
 ---
 
@@ -47,46 +47,50 @@ Desarrollar un producto mínimo de software que permita administrar información
 - Contenedores.
 - Control de versiones.
 - Gestión de actividades.
-- Herramientas de Business Intelligence.
+- Business Intelligence.
 
 ---
 
 # 🏗️ Arquitectura
 
-```text
-┌──────────────────────────────┐
-│        Angular Frontend      │
-│      http://localhost:4200   │
-└──────────────┬───────────────┘
-               │ HTTP / JSON
-               ▼
-┌──────────────────────────────┐
-│        FastAPI Backend       │
-│    http://127.0.0.1:8000     │
-└──────────────┬───────────────┘
-               │ SQLAlchemy
-               ▼
-┌──────────────────────────────┐
-│       PostgreSQL 16          │
-│        Docker Compose        │
-│       localhost:5432         │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│          Power BI            │
-│  Indicadores y visualización │
-└──────────────────────────────┘
+```mermaid
+flowchart TD
+
+    A["🅰️ Angular Frontend<br/>http://localhost:4200"]
+
+    B["⚡ FastAPI Backend<br/>http://127.0.0.1:8000"]
+
+    C["🐘 PostgreSQL 16<br/>Docker Compose<br/>localhost:5432"]
+
+    D["📊 Power BI<br/>Indicadores y visualización"]
+
+    E["🐙 Git / GitHub<br/>Control de versiones"]
+
+    F["📋 Jira<br/>Gestión del proyecto"]
+
+    A -->|"HTTP / JSON"| B
+
+    B -->|"SQLAlchemy"| C
+
+    C -->|"Importación / Actualización"| D
+
+    E -.->|"Versionamiento"| A
+
+    E -.->|"Versionamiento"| B
+
+    F -.->|"Seguimiento de actividades"| E
 ```
 
-Herramientas complementarias:
+## Flujo principal
 
-```text
-Git / GitHub → Control de versiones
-Jira         → Gestión del proyecto
-Power BI     → Inteligencia de negocios
-Docker       → Infraestructura
-```
+1. El usuario utiliza el frontend desarrollado en Angular.
+2. Angular realiza solicitudes HTTP al backend FastAPI.
+3. FastAPI procesa las operaciones.
+4. SQLAlchemy gestiona la comunicación con PostgreSQL.
+5. PostgreSQL almacena estaciones, productos, inventarios y ventas.
+6. Power BI consulta PostgreSQL para generar indicadores.
+7. GitHub mantiene el control de versiones.
+8. Jira permite administrar y documentar las actividades del proyecto.
 
 ---
 
@@ -217,24 +221,22 @@ El módulo de inventario permite:
 - Consultar únicamente los productos de esa estación.
 - Visualizar galones disponibles.
 - Modificar existencias.
-- Asignar nuevos productos a estaciones.
+- Asignar productos a estaciones.
 - Identificar niveles de inventario.
 
-Clasificación utilizada:
+### Clasificación
 
-```text
-Menos de 500 galones     → Crítico
-500 a 999.999 galones    → Bajo
-1000 galones o más       → Estable
-```
+| Galones disponibles | Estado |
+|---:|---|
+| Menos de 500 | 🔴 Crítico |
+| De 500 a menos de 1000 | 🟡 Bajo |
+| 1000 o más | 🟢 Estable |
 
 ---
 
 ## ⛽ Productos
 
 Permite registrar y consultar combustibles.
-
-Productos utilizados durante las pruebas:
 
 | Combustible | Color |
 |---|---|
@@ -243,7 +245,7 @@ Productos utilizados durante las pruebas:
 | Diesel | ⚫ Negro |
 | V-Power | 🔴 Rojo |
 
-Cada producto contiene su propio precio por galón.
+Cada producto contiene un precio por galón.
 
 ---
 
@@ -253,23 +255,23 @@ Permite:
 
 - Registrar estaciones.
 - Consultar estaciones.
-- Visualizar estado.
+- Visualizar su estado.
 - Eliminar estaciones.
 
 ### Eliminación controlada
 
-Cuando una estación es eliminada también se eliminan:
+Cuando una estación se elimina también se eliminan:
 
 - Sus registros de inventario.
 - Sus ventas relacionadas.
 
-Antes de ejecutar la eliminación, el frontend solicita confirmación al usuario.
+Antes de realizar la eliminación, el frontend solicita confirmación.
 
 ---
 
 ## 🔎 Auditoría por estación
 
-El módulo de Auditoría permite seleccionar una estación y consultar exclusivamente:
+El módulo de Auditoría permite seleccionar una estación y consultar únicamente:
 
 - Productos asignados.
 - Inventario disponible.
@@ -278,38 +280,60 @@ El módulo de Auditoría permite seleccionar una estación y consultar exclusiva
 - Ingresos.
 - Historial de ventas.
 
-Esto permite analizar cada estación individualmente sin mezclar los datos de toda la red.
+Esto permite analizar cada estación individualmente.
 
 ---
 
 # 🗄️ Modelo de datos
 
-La aplicación utiliza cuatro tablas principales:
+El sistema utiliza cuatro tablas principales:
 
-```text
-estaciones
-productos
-inventario
-ventas
+- `estaciones`
+- `productos`
+- `inventario`
+- `ventas`
+
+## Diagrama de relaciones
+
+```mermaid
+erDiagram
+
+    ESTACIONES ||--o{ INVENTARIO : posee
+    ESTACIONES ||--o{ VENTAS : registra
+
+    PRODUCTOS ||--o{ INVENTARIO : pertenece
+    PRODUCTOS ||--o{ VENTAS : vendido_en
+
+    ESTACIONES {
+        int id PK
+        string nombre
+        string direccion
+        string estado
+    }
+
+    PRODUCTOS {
+        int id PK
+        string nombre
+        decimal precio_galon
+    }
+
+    INVENTARIO {
+        int id PK
+        int estacion_id FK
+        int producto_id FK
+        decimal galones_disponibles
+    }
+
+    VENTAS {
+        int id PK
+        int estacion_id FK
+        int producto_id FK
+        decimal galones
+        decimal precio_galon
+        decimal total
+        datetime fecha
+    }
 ```
-
-Relaciones principales:
-
-```text
-estaciones
-    │
-    ├── inventario
-    │
-    └── ventas
-
-productos
-    │
-    ├── inventario
-    │
-    └── ventas
-```
-
-Una estación puede poseer varios productos y cada producto puede encontrarse en varias estaciones.
 
 ---
 
@@ -369,55 +393,57 @@ GET /dashboard
 
 # 📖 Swagger
 
-Con el sistema ejecutándose, la documentación interactiva se encuentra en:
+Con el sistema ejecutándose:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-Desde Swagger se pueden probar los endpoints directamente.
+Swagger permite consultar y probar los endpoints de la API directamente desde el navegador.
 
 ---
 
 # 💻 Instalación en una computadora nueva
 
-Esta sección explica cómo ejecutar el proyecto desde cero en otra computadora.
+Esta sección explica cómo instalar y ejecutar el proyecto desde cero.
 
-> Las instrucciones están preparadas principalmente para Windows utilizando CMD.
+> Las instrucciones están preparadas para Windows utilizando CMD.
 
 ---
 
-## 1. Requisitos
+# 1️⃣ Requisitos
 
-Antes de descargar el proyecto deben estar instaladas las siguientes herramientas:
+La computadora debe tener instalados:
 
-### Git
+- Git.
+- Docker Desktop.
+- Python 3.11.
+- Node.js.
+- npm.
 
-Descargar desde:
+Power BI Desktop solo es necesario para visualizar el archivo `.pbix`.
 
-```text
-https://git-scm.com/
-```
+---
 
-Verificar instalación:
+## Git
+
+Comprobar instalación:
 
 ```cmd
 git --version
 ```
 
----
-
-### Docker Desktop
-
-Descargar desde:
+Descarga:
 
 ```text
-https://www.docker.com/products/docker-desktop/
+https://git-scm.com/
 ```
 
-Después de instalarlo, abrir **Docker Desktop** antes de ejecutar el proyecto.
+---
 
-Verificar:
+## Docker Desktop
+
+Comprobar:
 
 ```cmd
 docker --version
@@ -429,11 +455,13 @@ Y:
 docker compose version
 ```
 
+Docker Desktop debe permanecer abierto durante la ejecución de PostgreSQL.
+
 ---
 
-### Python
+## Python
 
-Se recomienda:
+Versión recomendada:
 
 ```text
 Python 3.11
@@ -445,17 +473,9 @@ Verificar:
 py --version
 ```
 
-o:
-
-```cmd
-python --version
-```
-
 ---
 
-### Node.js
-
-Instalar una versión compatible con Angular.
+## Node.js
 
 Durante el desarrollo se utilizó Node.js 24.
 
@@ -465,7 +485,7 @@ Verificar:
 node --version
 ```
 
-Verificar npm:
+Y:
 
 ```cmd
 npm --version
@@ -473,17 +493,15 @@ npm --version
 
 ---
 
-# 📥 2. Clonar el repositorio
+# 2️⃣ Clonar el repositorio
 
-Abrir **CMD** en la carpeta donde se desea guardar el proyecto.
-
-Ejecutar:
+Abrir CMD y ejecutar:
 
 ```cmd
 git clone https://github.com/JorgeDanielAchijLopez/-Tarea-02---Producto-M-nimo-Software- Shell-Fuel-Control
 ```
 
-Después:
+Ingresar al proyecto:
 
 ```cmd
 cd Shell-Fuel-Control
@@ -491,9 +509,9 @@ cd Shell-Fuel-Control
 
 ---
 
-# 🐍 3. Crear entorno virtual del backend
+# 3️⃣ Crear entorno virtual de Python
 
-Desde la raíz del proyecto:
+Desde la raíz:
 
 ```cmd
 py -3.11 -m venv backend\venv
@@ -505,7 +523,7 @@ Activarlo:
 backend\venv\Scripts\activate
 ```
 
-El CMD debería mostrar algo similar a:
+El CMD debería mostrar:
 
 ```text
 (venv) C:\...\Shell-Fuel-Control>
@@ -513,19 +531,23 @@ El CMD debería mostrar algo similar a:
 
 ---
 
-# 📦 4. Instalar dependencias de Python
-
-Ejecutar:
+# 4️⃣ Instalar dependencias del backend
 
 ```cmd
 pip install -r backend\requirements.txt
 ```
 
-Esto instalará las dependencias utilizadas por FastAPI y PostgreSQL.
+Esto instalará:
+
+- FastAPI.
+- Uvicorn.
+- SQLAlchemy.
+- Psycopg2.
+- Python Dotenv.
 
 ---
 
-# 🔐 5. Crear archivo de variables de entorno
+# 5️⃣ Crear variables de entorno
 
 El archivo:
 
@@ -535,15 +557,13 @@ backend/.env
 
 no se almacena en GitHub porque se encuentra protegido mediante `.gitignore`.
 
-Debe crearse manualmente.
-
-Desde la raíz del proyecto se puede crear mediante CMD:
+Crear desde CMD:
 
 ```cmd
 echo DATABASE_URL=postgresql+psycopg2://shell_admin:shell123@localhost:5432/shell_fuel_control> backend\.env
 ```
 
-El contenido resultante debe ser:
+Contenido:
 
 ```env
 DATABASE_URL=postgresql+psycopg2://shell_admin:shell123@localhost:5432/shell_fuel_control
@@ -551,15 +571,15 @@ DATABASE_URL=postgresql+psycopg2://shell_admin:shell123@localhost:5432/shell_fue
 
 ---
 
-# 🅰️ 6. Instalar dependencias de Angular
+# 6️⃣ Instalar dependencias de Angular
 
-Ingresar a la carpeta frontend:
+Ingresar al frontend:
 
 ```cmd
 cd frontend
 ```
 
-Instalar paquetes:
+Instalar:
 
 ```cmd
 npm install
@@ -573,11 +593,25 @@ cd ..
 
 ---
 
-# 🐳 7. Iniciar PostgreSQL
+# 7️⃣ Abrir Docker Desktop
 
-Asegurarse primero de que **Docker Desktop esté abierto**.
+Antes de continuar, iniciar:
 
-Desde la raíz ejecutar:
+```text
+Docker Desktop
+```
+
+Comprobar desde CMD:
+
+```cmd
+docker ps
+```
+
+---
+
+# 8️⃣ Iniciar PostgreSQL
+
+Desde la raíz:
 
 ```cmd
 docker compose up -d
@@ -589,7 +623,7 @@ Verificar:
 docker ps
 ```
 
-Debe aparecer un contenedor llamado:
+Debe aparecer:
 
 ```text
 shell_postgres
@@ -597,9 +631,7 @@ shell_postgres
 
 ---
 
-# 🗃️ Configuración de PostgreSQL
-
-El archivo `docker-compose.yml` utiliza:
+# 🐘 Configuración de PostgreSQL
 
 | Parámetro | Valor |
 |---|---|
@@ -612,15 +644,9 @@ El archivo `docker-compose.yml` utiliza:
 
 ---
 
-# ▶️ 8. Ejecutar el sistema
+# 9️⃣ Ejecutar Shell Fuel Control
 
-El proyecto incluye el script:
-
-```text
-run-dev.bat
-```
-
-Desde la raíz simplemente ejecutar:
+Desde la raíz:
 
 ```cmd
 run-dev
@@ -628,24 +654,20 @@ run-dev
 
 El script realiza automáticamente:
 
-1. Verifica PostgreSQL.
-2. Inicia Docker si es necesario.
-3. Limpia procesos anteriores.
-4. Inicia FastAPI.
-5. Verifica que la API responda.
-6. Inicia Angular.
+```mermaid
+flowchart LR
 
-Cuando termine aparecerá:
+    A["run-dev"] --> B["Verificar PostgreSQL"]
 
-```text
-Frontend:
-http://localhost:4200
+    B --> C["Limpiar procesos anteriores"]
 
-API:
-http://127.0.0.1:8000
+    C --> D["Iniciar FastAPI"]
 
-Swagger:
-http://127.0.0.1:8000/docs
+    D --> E["Verificar /health"]
+
+    E --> F["Iniciar Angular"]
+
+    F --> G["Sistema listo"]
 ```
 
 ---
@@ -654,33 +676,15 @@ http://127.0.0.1:8000/docs
 
 | Servicio | Dirección |
 |---|---|
-| Frontend Angular | http://localhost:4200 |
-| API FastAPI | http://127.0.0.1:8000 |
-| Swagger | http://127.0.0.1:8000/docs |
-| Health Check | http://127.0.0.1:8000/health |
-| Database Health | http://127.0.0.1:8000/database/health |
+| 🅰️ Frontend Angular | http://localhost:4200 |
+| ⚡ API FastAPI | http://127.0.0.1:8000 |
+| 📖 Swagger | http://127.0.0.1:8000/docs |
+| ❤️ API Health | http://127.0.0.1:8000/health |
+| 🐘 Database Health | http://127.0.0.1:8000/database/health |
 
 ---
 
-# 🛑 Detener el sistema
-
-El proyecto incluye:
-
-```text
-stop-dev.bat
-```
-
-Para detener correctamente Angular y FastAPI ejecutar:
-
-```cmd
-stop-dev
-```
-
-Este script libera los puertos utilizados durante el desarrollo.
-
----
-
-# 🔌 Puertos utilizados
+# 🔌 Puertos
 
 | Servicio | Puerto |
 |---|---:|
@@ -690,55 +694,60 @@ Este script libera los puertos utilizados durante el desarrollo.
 
 ---
 
+# 🛑 Detener el proyecto
+
+Ejecutar desde la raíz:
+
+```cmd
+stop-dev
+```
+
+El script detiene correctamente:
+
+- Angular.
+- FastAPI.
+
+Esto evita procesos duplicados en los puertos `4200` y `8000`.
+
+---
+
 # 🆕 Primera ejecución
 
-En una computadora nueva la base de datos estará inicialmente vacía.
+En una computadora nueva PostgreSQL estará inicialmente vacío.
 
 Las tablas son creadas automáticamente cuando inicia FastAPI.
 
 Se recomienda registrar información en este orden:
 
-```text
-1. Productos
-       ↓
-2. Estaciones
-       ↓
-3. Inventario
-       ↓
-4. Ventas
-       ↓
-5. Dashboard / Auditoría
+```mermaid
+flowchart LR
+
+    A["1. Productos"]
+    --> B["2. Estaciones"]
+    --> C["3. Inventario"]
+    --> D["4. Ventas"]
+    --> E["5. Dashboard"]
+    --> F["6. Auditoría"]
 ```
 
 ---
 
-## Datos de prueba sugeridos
+# 📝 Datos de prueba sugeridos
 
-### Productos
+## Productos
 
-```text
-Regular
-Super
-Diesel
-V-Power
-```
-
-Ejemplo de precios utilizados durante las pruebas:
-
-```text
-Regular  → Q33.99
-Super    → Q35.79
-Diesel   → Q31.49
-V-Power  → Q36.99
-```
-
-Los valores pueden modificarse para realizar nuevas pruebas.
+| Producto | Precio de ejemplo |
+|---|---:|
+| Regular | Q33.99 |
+| Super | Q35.79 |
+| Diesel | Q31.49 |
+| V-Power | Q36.99 |
 
 ---
 
-### Estaciones
+## Estaciones
 
-Ejemplo:
+Ejemplos:
 
 ```text
 Shell Zona 10
@@ -752,7 +761,7 @@ Después de crear una estación se deben asignar productos desde el módulo **In
 
 # 🧪 Pruebas sugeridas
 
-## Prueba de API
+## API Health
 
 Abrir:
 
@@ -771,7 +780,7 @@ Resultado esperado:
 
 ---
 
-## Prueba de base de datos
+## Base de datos
 
 Abrir:
 
@@ -783,68 +792,68 @@ Debe indicar conexión exitosa con PostgreSQL.
 
 ---
 
-## Prueba de venta
-
-1. Crear un producto.
-2. Crear una estación.
-3. Asignar inventario.
-4. Registrar una venta.
-5. Verificar que los galones disminuyan.
+## Venta
 
 Ejemplo:
 
 ```text
-Inventario inicial: 100 galones
-Venta: 5 galones
-Inventario esperado: 95 galones
+Inventario inicial = 100 galones
+Venta = 5 galones
+Inventario esperado = 95 galones
 ```
+
+La venta debe:
+
+- Registrarse.
+- Calcular el total.
+- Descontar inventario.
+- Aparecer en el historial.
+- Actualizar el Dashboard.
+- Aparecer en Auditoría.
 
 ---
 
-## Prueba de inventario insuficiente
+## Inventario insuficiente
 
-Intentar vender una cantidad superior al inventario disponible.
+Intentar vender más galones de los disponibles.
 
-El backend debe impedir la operación y devolver:
+Respuesta esperada:
 
 ```text
 Inventario insuficiente para realizar la venta
 ```
 
+La venta no debe almacenarse.
+
 ---
 
-## Prueba de eliminación de estación
+## Eliminación de estación
 
 Crear una estación temporal.
 
 Asignarle:
 
+- Producto.
 - Inventario.
-- Una venta.
+- Venta.
 
-Posteriormente eliminar la estación.
+Posteriormente eliminarla.
 
 El sistema debe eliminar:
 
 ```text
 Estación
-Inventario relacionado
-Ventas relacionadas
+Inventario asociado
+Ventas asociadas
 ```
 
 ---
 
 # 📊 Power BI
 
-El proyecto utiliza Power BI como herramienta de Business Intelligence.
-
 Power BI se conecta directamente a PostgreSQL.
 
----
-
-## Configuración de conexión
-
-En Power BI:
+## Conexión
 
 ```text
 Inicio
@@ -852,23 +861,27 @@ Inicio
 → PostgreSQL
 ```
 
-Configuración:
+Servidor:
 
 ```text
-Servidor:
 localhost:5432
+```
 
-Base de datos:
+Base:
+
+```text
 shell_fuel_control
 ```
 
-Autenticación:
+Usuario:
 
 ```text
-Usuario:
 shell_admin
+```
 
 Contraseña:
+
+```text
 shell123
 ```
 
@@ -880,7 +893,7 @@ Importar
 
 ---
 
-## Tablas utilizadas
+# 📋 Tablas utilizadas en Power BI
 
 ```text
 public.estaciones
@@ -891,48 +904,51 @@ public.ventas
 
 ---
 
-## Relaciones
+# 🔗 Modelo de Power BI
 
-```text
-estaciones[id]
-      1
-      │
-      ├──── * inventario[estacion_id]
-      │
-      └──── * ventas[estacion_id]
+```mermaid
+flowchart LR
 
+    E["estaciones[id]"]
 
-productos[id]
-      1
-      │
-      ├──── * inventario[producto_id]
-      │
-      └──── * ventas[producto_id]
+    P["productos[id]"]
+
+    I["inventario"]
+
+    V["ventas"]
+
+    E -->|"1 : N<br/>estacion_id"| I
+
+    E -->|"1 : N<br/>estacion_id"| V
+
+    P -->|"1 : N<br/>producto_id"| I
+
+    P -->|"1 : N<br/>producto_id"| V
 ```
 
 ---
 
-## Medidas DAX
+# 🧮 Medidas DAX
 
-### Ingresos Totales
+## Ingresos Totales
 
 ```DAX
 Ingresos Totales = SUM('public ventas'[total])
 ```
 
-### Galones Vendidos
+## Galones Vendidos
 
 ```DAX
 Galones Vendidos = SUM('public ventas'[galones])
 ```
 
-### Ventas Registradas
+## Ventas Registradas
 
 ```DAX
 Ventas Registradas = COUNTROWS('public ventas')
 ```
 
-### Inventario Total
+## Inventario Total
 
 ```DAX
 Inventario Total = SUM('public inventario'[galones_disponibles])
@@ -940,9 +956,9 @@ Inventario Total = SUM('public inventario'[galones_disponibles])
 
 ---
 
-## Indicadores del panel
+# 📈 Panel de Power BI
 
-El dashboard de Power BI muestra:
+El panel ejecutivo contiene:
 
 - Ingresos totales.
 - Inventario total.
@@ -955,31 +971,35 @@ El dashboard de Power BI muestra:
 
 ---
 
-## Actualizar datos de Power BI
+# 🔄 Actualizar Power BI
 
-El proyecto utiliza modo **Importar**.
+El proyecto utiliza modo:
 
-Por esta razón Power BI no actualiza automáticamente cada vez que cambia PostgreSQL.
+```text
+Importar
+```
 
-Después de registrar nuevos datos en Shell Fuel Control utilizar:
+Por esa razón los datos no cambian automáticamente cuando PostgreSQL recibe nuevos registros.
+
+Para actualizarlos:
 
 ```text
 Inicio → Actualizar
 ```
 
-Power BI volverá a consultar PostgreSQL.
+Power BI vuelve a consultar PostgreSQL.
 
 ---
 
 # 📋 Jira
 
-El proyecto se gestionó mediante Jira utilizando una plantilla Scrum.
+El desarrollo se gestionó utilizando Jira y metodología Scrum.
 
-## Proyecto
+## Proyecto Jira
 
-[Shell Fuel Control - Jira](https://miumg-team-k6y4r2cb.atlassian.net/jira/software/projects/SFC/list?jql=project%20%3D%20SFC%20ORDER%20BY%20cf%5B10019%5D%20ASC)
+[🔗 Shell Fuel Control - Jira](https://miumg-team-k6y4r2cb.atlassian.net/jira/software/projects/SFC/list?jql=project%20%3D%20SFC%20ORDER%20BY%20cf%5B10019%5D%20ASC)
 
-Jira contiene actividades relacionadas con:
+Se registraron actividades para:
 
 - PostgreSQL.
 - Docker.
@@ -991,22 +1011,21 @@ Jira contiene actividades relacionadas con:
 - Dashboard.
 - Angular.
 - Auditoría.
+- Eliminación de estaciones.
 - Power BI.
 - Corrección de errores.
-- Pruebas finales.
+- Pruebas.
 - Documentación.
-
-Los errores detectados durante el desarrollo también fueron documentados como actividades.
 
 ---
 
 # 🐙 GitHub
 
-Repositorio oficial:
+Repositorio:
 
-[Shell Fuel Control - GitHub](https://github.com/JorgeDanielAchijLopez/-Tarea-02---Producto-M-nimo-Software-)
+[🔗 Shell Fuel Control - GitHub](https://github.com/JorgeDanielAchijLopez/-Tarea-02---Producto-M-nimo-Software-)
 
-El proyecto utiliza Git para mantener la trazabilidad del desarrollo mediante commits independientes.
+Git se utilizó para mantener trazabilidad mediante commits independientes.
 
 Ejemplos:
 
@@ -1014,12 +1033,13 @@ Ejemplos:
 feat: conectar FastAPI con PostgreSQL
 feat: implementar control de inventario
 feat: implementar registro de ventas
-feat: integrar dashboard Angular
+feat: integrar dashboard Angular con API del backend
 feat: implementar modulo frontend de inventario
 feat: implementar modulo frontend de productos
 feat: implementar modulo frontend de estaciones
 feat: agregar eliminacion en cascada de estaciones
 fix: evitar procesos duplicados en entorno de desarrollo
+docs: completar documentacion e instrucciones de instalacion
 ```
 
 ---
@@ -1036,7 +1056,7 @@ v1.0.0
 
 # 🎥 Video explicativo
 
-Enlace al video:
+Enlace:
 
 ```text
 PENDIENTE DE AGREGAR ENLACE DE GOOGLE DRIVE
@@ -1058,19 +1078,17 @@ PENDIENTE DE AGREGAR ENLACE DE GOOGLE DRIVE
 
 ## FastAPI no inicia
 
-Probar manualmente desde la raíz:
+Ejecutar manualmente:
 
 ```cmd
 backend\venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
-Esto permite observar directamente cualquier error del backend.
+Esto permite observar directamente cualquier error.
 
 ---
 
 ## Puerto 8000 ocupado
-
-Verificar:
 
 ```cmd
 netstat -ano | findstr :8000
@@ -1082,39 +1100,35 @@ Ejemplo:
 TCP 127.0.0.1:8000 0.0.0.0:0 LISTENING 12345
 ```
 
-Finalizar el proceso:
+Cerrar:
 
 ```cmd
 taskkill /F /T /PID 12345
 ```
 
-Cambiar `12345` por el PID correspondiente.
-
 ---
 
 ## Puerto 4200 ocupado
-
-Verificar:
 
 ```cmd
 netstat -ano | findstr :4200
 ```
 
-Después finalizar el PID correspondiente.
+Finalizar el PID correspondiente.
 
 ---
 
-## Docker no está iniciado
-
-Verificar:
+## Docker no responde
 
 ```cmd
 docker ps
 ```
 
-Si Docker no responde, abrir **Docker Desktop**.
+Si falla:
 
-Después:
+1. Abrir Docker Desktop.
+2. Esperar a que Docker termine de iniciar.
+3. Ejecutar:
 
 ```cmd
 docker compose up -d
@@ -1122,9 +1136,7 @@ docker compose up -d
 
 ---
 
-## PostgreSQL no aparece
-
-Ejecutar:
+## PostgreSQL no inicia
 
 ```cmd
 docker compose ps
@@ -1138,9 +1150,9 @@ docker compose up -d
 
 ---
 
-## Frontend no conecta con FastAPI
+## Frontend no conecta con backend
 
-Verificar primero:
+Primero comprobar:
 
 ```text
 http://127.0.0.1:8000/health
@@ -1148,7 +1160,7 @@ http://127.0.0.1:8000/health
 
 Si no responde, FastAPI está apagado.
 
-Después verificar:
+Después comprobar:
 
 ```text
 http://localhost:4200
@@ -1158,24 +1170,23 @@ http://localhost:4200
 
 ## Power BI no actualiza
 
-1. Verificar que Docker/PostgreSQL esté funcionando.
-2. En Power BI seleccionar:
+Verificar que PostgreSQL esté encendido:
+
+```cmd
+docker ps
+```
+
+Después en Power BI:
 
 ```text
 Inicio → Actualizar
 ```
 
-3. Confirmar conexión con:
-
-```text
-localhost:5432
-```
-
 ---
 
-# 🔄 Flujo rápido para ejecutar en otra computadora
+# ⚡ Instalación rápida
 
-Para una computadora que ya tenga instalados Git, Python, Node y Docker Desktop:
+Para una PC con Git, Python, Node.js y Docker Desktop instalados:
 
 ```cmd
 git clone https://github.com/JorgeDanielAchijLopez/-Tarea-02---Producto-M-nimo-Software- Shell-Fuel-Control
@@ -1201,7 +1212,7 @@ docker compose up -d
 run-dev
 ```
 
-Después abrir:
+Abrir:
 
 ```text
 http://localhost:4200
@@ -1209,33 +1220,29 @@ http://localhost:4200
 
 ---
 
-# ✅ Comprobación rápida de instalación
+# ✅ Comprobación de instalación
 
 Una instalación correcta debe cumplir:
 
-```text
-☑ Docker Desktop activo
-☑ shell_postgres ejecutándose
-☑ FastAPI en puerto 8000
-☑ Angular en puerto 4200
-☑ /health devuelve OK
-☑ /database/health devuelve OK
-☑ Frontend abre correctamente
-```
+- ✅ Docker Desktop activo.
+- ✅ `shell_postgres` ejecutándose.
+- ✅ FastAPI en puerto `8000`.
+- ✅ Angular en puerto `4200`.
+- ✅ `/health` devuelve `OK`.
+- ✅ `/database/health` devuelve `OK`.
+- ✅ El frontend abre correctamente.
 
-Comprobar Docker:
+Comprobar:
 
 ```cmd
 docker ps
 ```
 
-Comprobar FastAPI:
-
 ```cmd
 curl http://127.0.0.1:8000/health
 ```
 
-Comprobar frontend:
+Frontend:
 
 ```text
 http://localhost:4200
@@ -1243,37 +1250,45 @@ http://localhost:4200
 
 ---
 
-# 🔒 Consideraciones
+# 🔒 Consideraciones de seguridad
 
-Las credenciales incluidas en `docker-compose.yml` y en los ejemplos de configuración se utilizan únicamente para fines académicos y ejecución local.
+Las credenciales incluidas en `docker-compose.yml` y en la documentación se utilizan únicamente para fines académicos y ejecución local.
 
-En un ambiente de producción se deberían utilizar:
+En un entorno de producción deberían implementarse:
 
-- Credenciales seguras.
 - Variables de entorno protegidas.
-- HTTPS.
+- Contraseñas seguras.
 - Gestión de secretos.
-- Control de usuarios y permisos.
+- HTTPS.
+- Autenticación.
+- Roles y permisos.
 - Copias de seguridad.
 - Monitoreo.
+- Registro de auditoría.
+- Políticas de recuperación.
 
 ---
 
 # 👨‍💻 Autor
 
-**Jorge Daniel Achij Lopez**  
-Carné **2890-23-11995**
+**Jorge Daniel Achij Lopez**
 
-Universidad Mariano Gálvez de Guatemala  
-Análisis de Sistemas II
+**Carné:** 2890-23-11995
 
----
+**Universidad Mariano Gálvez de Guatemala**
 
-## 📚 Enlaces
+**Curso:** Análisis de Sistemas II
 
-- [Repositorio GitHub](https://github.com/JorgeDanielAchijLopez/-Tarea-02---Producto-M-nimo-Software-)
-- [Proyecto Jira](https://miumg-team-k6y4r2cb.atlassian.net/jira/software/projects/SFC/list?jql=project%20%3D%20SFC%20ORDER%20BY%20cf%5B10019%5D%20ASC)
+**Catedrático:** Ing. ERICK EDUARDO PEREZ AGUILAR
 
 ---
 
-> **Shell Fuel Control v1.0.0** — Proyecto académico desarrollado como producto mínimo de software Backend-Frontend.
+# 🔗 Enlaces
+
+- [🐙 Repositorio GitHub](https://github.com/JorgeDanielAchijLopez/-Tarea-02---Producto-M-nimo-Software-)
+- [📋 Proyecto Jira](https://miumg-team-k6y4r2cb.atlassian.net/jira/software/projects/SFC/list?jql=project%20%3D%20SFC%20ORDER%20BY%20cf%5B10019%5D%20ASC)
+
+---
+
+> **Shell Fuel Control v1.0.0**  
+> Producto mínimo de software Backend-Frontend desarrollado para Análisis de Sistemas II.
